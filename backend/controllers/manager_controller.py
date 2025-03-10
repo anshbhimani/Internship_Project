@@ -37,9 +37,17 @@ async def get_project_team(project_id: str):
     team = await db["project_team"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
+    
+    developers_info = []
+    for user_id in team["developers"]:
+        user = await db["users"].find_one({"_id": user_id}, {"_id": 1, "firstname": 1})
+        if user:
+            developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
 
-    return {"projectId": str(team["projectId"]), "developers": [str(user) for user in team["developers"]]}
-
+    return {
+        "projectId": str(team["projectId"]),
+        "developers": developers_info
+    }
 async def update_project_team(project_id: str, add_developers: List[str] = [], remove_developers: List[str] = []):
     try:
         project_id = ObjectId(project_id)

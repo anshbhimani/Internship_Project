@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from controllers.admin_controller import assign_manager, deassign_manager,get_all_managers
 
-router = APIRouter()
+router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # Route to assign manager to a developer
 @router.put("/admin/assign-manager/{developer_id}")
