@@ -9,6 +9,8 @@ import { ManagerDashboard } from "./components/manager/ManagerDashboard";
 import { ErrorPage } from "./components/Error/ErrorPage";
 import { TasksPage } from "./components/common/Tasks";
 import { AddTask } from "./components/manager/AddTask";
+import { AddModule } from "./components/manager/AddModule"; // Import AddModule
+import { AssignTask } from "./components/manager/AssignTask";
 
 export const API_BASE_URL = "http://localhost:6565";
 
@@ -29,33 +31,35 @@ function App() {
   };
 
   return (
-      <div className="layout-fixed sidebar-expand-lg bg-body-tertiary sidebar-open app-loaded">
-        <div className="container-fluid">
-          <div className="row">
-            {/* ✅ Sidebar will always be visible if userRole exists */}
-            {userRole && <UserSidebar userRole={userRole} onLogout={handleLogout} />}
-            <div className="col-md-10 p-4">
-              <Routes>
-                <Route path="/login" element={<Login setUserRole={setUserRole} />} />
-                <Route path="/profile/:userRole" element={<ErrorPage />} />
+    <div className="layout-fixed sidebar-expand-lg bg-body-tertiary sidebar-open app-loaded">
+      <div className="container-fluid">
+        <div className="row">
+          {/* ✅ Sidebar will always be visible if userRole exists */}
+          {userRole && <UserSidebar userRole={userRole} onLogout={handleLogout} />}
+          <div className="col-md-10 p-4">
+            <Routes>
+              <Route path="/login" element={<Login setUserRole={setUserRole} />} />
+              <Route path="/profile/:userRole" element={<ErrorPage />} />
 
-                {/* Conditional Dashboard Routes */}
-                <Route path="/profile/admin" element={userRole === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
-                <Route path="/admin/add_project" element={userRole === "admin" ? <ProjectForm /> : <Navigate to="/login" />} />
-                <Route path="/profile/manager" element={userRole === "manager" ? <ManagerDashboard /> : <Navigate to="/login" />} />
-                <Route path="/profile/developer" element={userRole === "developer" ? <DeveloperDashboard /> : <Navigate to="/login" />} />
+              {/* Conditional Dashboard Routes */}
+              <Route path="/profile/admin" element={userRole === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
+              <Route path="/admin/add_project" element={userRole === "admin" ? <ProjectForm /> : <Navigate to="/login" />} />
+              <Route path="/profile/manager" element={userRole === "manager" ? <ManagerDashboard /> : <Navigate to="/login" />} />
+              <Route path="/profile/developer" element={userRole === "developer" ? <DeveloperDashboard /> : <Navigate to="/login" />} />
 
-                {/* New Routes for Tasks */}
-                <Route path="/tasks" element={userRole ? <TasksPage /> : <Navigate to="/login" />} />
-                <Route path="/manager/add_task" element={userRole === "manager" ? <AddTask /> : <Navigate to="/login" />} />
-
-                {/* Redirect unknown routes to login */}
-                <Route path="*" element={<Navigate to="/login" />} />
-              </Routes>
-            </div>
+              {/* New Routes for Tasks and AddModule */}
+              <Route path="/tasks" element={userRole ? <TasksPage /> : <Navigate to="/login" />} />
+              <Route path="/manager/add_task" element={userRole === "manager" ? <AddTask /> : <Navigate to="/login" />} />
+              <Route path="/manager/add_module" element={userRole === "manager" ? <AddModule /> : <Navigate to="/login" />} /> {/* Add AddModule route */}
+              <Route path="/manager/assign_task" element={userRole === "manager" ? <AssignTask /> : <Navigate to="/login" />} />
+              
+              {/* Redirect unknown routes to login */}
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
           </div>
         </div>
       </div>
+    </div>
   );
 }
 

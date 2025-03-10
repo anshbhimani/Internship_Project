@@ -7,6 +7,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../../App";
 import Cookies from "js-cookie";
 import { Projects } from "./Projects";
+import { AssignTask } from "./AssignTask";
+import { AddModule } from "./AddModule";
 
 export const ManagerDashboard = () => {
   const location = useLocation();
@@ -62,6 +64,8 @@ export const ManagerDashboard = () => {
         {activeTab === "addTask" && <AddTask />}
         {activeTab === "viewTasks" && <TasksPage />}
         {activeTab === "viewProjects" && <Projects/>}
+        {activeTab === "assignTask" && <AssignTask/>}
+        {activeTab === "addModule" && <AddModule/>}
       </div>
     </div>
   );

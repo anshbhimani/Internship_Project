@@ -1,48 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { useForm } from 'react-hook-form';
-import axios from 'axios'; // Add this import for axios
-import { useNavigate } from 'react-router-dom'; // Add this import for navigation
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../App';
 
 export const AddTask = () => {
   const { register, handleSubmit, setValue } = useForm();
   const managerId = Cookies.get("managerId");
-  const navigate = useNavigate(); // Initialize navigate function
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [modules, setModules] = useState([]);
-  const [statuses, setStatuses] = useState([]);
-  
+
   // Fetch projects on component mount
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/managers/${managerId}/projects/`);
         setProjects(res.data); // Set projects from API
-        
-        
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
 
     fetchProjects();
-  }, []);
+  }, [managerId]);
 
-  useEffect(() => {
-    console.log("Projects from add task:", projects); // This will log after state is updated
-  }, [projects]);
-
+  // Fetch modules and statuses when a project is selected
   const fetchModulesAndStatuses = async (projectId) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/modules/modules/${projectId}/modules-statuses/`);
       setModules(res.data.modules);  // Update modules based on the selected project
-      setStatuses(res.data.statuses);  // Update statuses (if needed)
+      setStatuses('Assigned');  // Update statuses (if needed)
+
+      // Set the default status to 'Assigned' after fetching statuses
+      const assignedStatus = res.data.statuses.find(status => status.statusName === 'Assigned');
+      if (assignedStatus) {
+        setValue('status_id', assignedStatus._id); // Set 'Assigned' status as default value
+      }
     } catch (error) {
       console.error("Error fetching modules and statuses:", error);
     }
   };
-  
 
   const submitHandler = async (data) => {
     data.role_id = managerId;
@@ -69,7 +68,6 @@ export const AddTask = () => {
     setValue("project_id", selectedProjectId);  // Set the selected project in the form
     fetchModulesAndStatuses(selectedProjectId);  // Fetch modules for the selected project
   };
-    
 
   return (
     <div>
@@ -98,43 +96,30 @@ export const AddTask = () => {
           </div>
 
           <div className="col-md-6">
-          <div className="form-group">
-            <label htmlFor="projectId" className="form-label">Project</label>
-            <select
-              {...register("project_id")}  // This binds the selected project to the form state
-              id="projectId"
-              className="form-control"
-              onChange={handleProjectChange}  // Trigger the function to fetch modules when a project is selected
-            >
-              <option value="">Select a Project</option>
-              {projects.map((project) => (
-                <option key={project._id} value={project._id}>
-                  {project.title} {/* Assuming project has a title */}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="moduleId" className="form-label">Module</label>
-            <select {...register("module_id")} id="moduleId" className="form-control">
-              <option value="">Select a Module</option>
-              {modules.map((module) => (
-                <option key={module._id} value={module._id}>
-                  {module.moduleName}  {/* Assuming module has a `moduleName` property */}
-                </option>
-              ))}
-            </select>
-          </div>
-
+            <div className="form-group">
+              <label htmlFor="projectId" className="form-label">Project</label>
+              <select
+                {...register("project_id")}  // This binds the selected project to the form state
+                id="projectId"
+                className="form-control"
+                onChange={handleProjectChange}  // Trigger the function to fetch modules when a project is selected
+              >
+                <option value="">Select a Project</option>
+                {projects.map((project) => (
+                  <option key={project._id} value={project._id}>
+                    {project.title} {/* Assuming project has a title */}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="form-group">
-              <label htmlFor="statusId" className="form-label">Status</label>
-              <select {...register("status_id")} id="statusId" className="form-control">
-                <option value="">Select a Status</option>
-                {statuses.map((status) => (
-                  <option key={status._id} value={status._id}>
-                    {status.statusName}
+              <label htmlFor="moduleId" className="form-label">Module</label>
+              <select {...register("module_id")} id="moduleId" className="form-control">
+                <option value="">Select a Module</option>
+                {modules.map((module) => (
+                  <option key={module._id} value={module._id}>
+                    {module.moduleName}  {/* Assuming module has a moduleName property */}
                   </option>
                 ))}
               </select>

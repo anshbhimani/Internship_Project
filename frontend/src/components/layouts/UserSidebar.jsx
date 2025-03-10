@@ -47,8 +47,18 @@ export const UserSidebar = ({ userRole, onLogout }) => {
               </Link>
             </li>
             <li>
+              <Link to="?tab=addModule" className={`d-block text-white p-2 ${activeTab === "addModule" ? "fw-bold" : ""}`}>
+                Add Module
+              </Link>
+            </li>
+            <li>
               <Link to="?tab=addTask" className={`d-block text-white p-2 ${activeTab === "addTask" ? "fw-bold" : ""}`}>
                 Add Task
+              </Link>
+            </li>
+            <li>
+              <Link to="?tab=assignTask" className={`d-block text-white p-2 ${activeTab === "assignTask" ? "fw-bold" : ""}`}>
+                Assign Task
               </Link>
             </li>
             <li>
