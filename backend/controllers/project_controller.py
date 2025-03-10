@@ -1,5 +1,5 @@
-from models.project_model import Project
-from config.database import project_collection,user_collection
+from models.project_model import Project,ProjectOut
+from config.database import project_collection,user_collection,tasks_collection
 from fastapi import HTTPException
 from typing import List
 from bson import ObjectId
@@ -87,6 +87,41 @@ async def assign_manager_to_project(project_id: str, manager_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+async def get_developer_projects(developer_id: str):
+    """Retrieve projects assigned to a developer"""
+    try:
+        developer_id = ObjectId(developer_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ObjectId format")
+
+    # Find projects where the developer is part of the developer_ids list
+    projects_cursor = project_collection.find({"developers": developer_id})
+    projects = await projects_cursor.to_list(length=None)
+
+    if not projects:
+        raise HTTPException(status_code=404, detail="No projects found for the developer")
+    
+    projects_out = []
+    # Return the projects with their developer_ids as strings
+    for project in projects:
+        project["developers"] = [str(dev_id) for dev_id in project["developers"]]
+        project["project_id"] = str(project["_id"]) 
+        
+        tasks_cursor = tasks_collection.find({"project_id": project["_id"], "assignedTo": developer_id})
+        tasks = await tasks_cursor.to_list(length=None)
+        
+        for task in tasks:
+            task["_id"] = str(task["_id"])
+            task["project_id"] = str(task["project_id"])
+            task["module_id"] = str(task["module_id"])
+            task["status_id"] = str(task["status_id"])
+
+        project["tasks"] = tasks 
+        project["module_id"] = project.get("module_id", None)
+        project["status_id"] = project.get("status_id", None)
+        project_out = ProjectOut(**project)  # Using ProjectOut to validate and serialize
+        projects_out.append(project_out.dict()) 
+    return projects
 
 async def get_projects_by_manager(manager_id: str):
     try:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from controllers.task_controller import create_task, get_project_tasks, update_task, delete_task
+from controllers.task_controller import create_task, get_project_tasks, update_task, delete_task,get_tasks_for_developer
 from typing import List
 from models.task_model import Task
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -24,7 +24,7 @@ async def remove_task(task_id: str):
     """API to delete a task"""
     return await delete_task(task_id)
 
-# @router.get("/{task_id}", response_model=List[dict])
-# async def fetch_task_user(task_id: str):
-#     """API to user for a specific task"""
-#     return await taskId_to_userId(task_id)
+@router.get("/developer/{developer_id}/{project_id}")
+async def get_tasks_for_developer_route(developer_id: str, project_id: str):
+    """API to fetch tasks assigned to a specific developer for a project"""
+    return await get_tasks_for_developer(developer_id, project_id)

@@ -9,7 +9,7 @@ class ProjectModule(BaseModel):
     estimatedHours: int
     status: str
     startDate: str
-
+    
     @validator('estimatedHours')
     def validate_estimated_hours(cls,v):
         if(v>0):

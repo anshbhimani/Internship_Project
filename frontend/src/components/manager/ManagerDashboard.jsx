@@ -19,7 +19,7 @@ export const ManagerDashboard = () => {
   const activeTab = searchParams.get("tab");
 
   // Retrieve managerId from cookies
-  const managerId = Cookies.get("managerId");
+  const managerId = Cookies.get("userId");
 
   const fetchManagerProjects = async () => {
     try {

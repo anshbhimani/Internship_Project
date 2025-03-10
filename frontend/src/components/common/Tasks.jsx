@@ -1,46 +1,63 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Make sure axios is installed
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { API_BASE_URL } from "../../App";
+import Cookies from "js-cookie";
 
 export const TasksPage = () => {
-  // States to hold the projects, selected project, and tasks
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedProject, setSelectedProject] = useState(""); // Now it's just a string (project title)
   const [tasks, setTasks] = useState([]);
+  const [role, setRole] = useState(""); // Add role to handle developer/manager distinction
+  const userId = Cookies.get("userId"); // Assuming you store developerId as well
 
-  // Fetch projects for the manager (replace with your API endpoint)
   useEffect(() => {
+    const userRole = Cookies.get('role'); // Assuming role is saved in cookies
+    setRole(userRole); // Set the role of the user (either manager or developer)
+    console.log("User Role : ", userRole);
+    
     const fetchProjects = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/projects`); // Your API endpoint for fetching projects
-        setProjects(res.data); // Assuming the response contains a list of projects
+        let res;
+        if (userRole === "manager") {
+          res = await axios.get(`${API_BASE_URL}/managers/${userId}/projects/`);
+        } else if (userRole === "developer") {
+          res = await axios.get(`${API_BASE_URL}/developer/${userId}`);
+        }
+
+        console.log(res.data);
+        setProjects(res.data); // Set the projects based on the user role
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
     fetchProjects();
-  }, []);
+  }, [userId, role]);
 
-  // Fetch tasks based on the selected project
   useEffect(() => {
     if (selectedProject) {
+      console.log("Selected Project : ", selectedProject);
+
       const fetchTasks = async () => {
         try {
-          console.log(`Selected Project: ${selectedProject}`);
-          const res = await axios.get(`${API_BASE_URL}/tasks/${selectedProject}`); // Your API endpoint for tasks
-          setTasks(res.data); // Assuming the response contains tasks data
+          let res;
+          if (role === "manager") {
+            res = await axios.get(`${API_BASE_URL}/tasks/${selectedProject.project_id}`);
+          } else if (role === "developer") {
+            res = await axios.get(`${API_BASE_URL}/tasks/developer/${userId}/${selectedProject.project_id}`);
+          }
+          setTasks(res.data);
         } catch (error) {
           console.error("Error fetching tasks:", error);
         }
       };
       fetchTasks();
     }
-  }, [selectedProject]); // Trigger task fetching when project changes
+  }, [selectedProject, role, userId]);
 
-  // Handle project selection
   const handleProjectChange = (e) => {
-    setSelectedProject(e.target.value);
+    const selected = projects.find(project => project.title === e.target.value); 
+    setSelectedProject(selected); // Store the entire project object
   };
 
   return (
@@ -55,15 +72,19 @@ export const TasksPage = () => {
             <select
               id="projectSelect"
               className="form-control"
-              value={selectedProject}
+              value={selectedProject.title || ""} // Set the value to selectedProject's title
               onChange={handleProjectChange}
             >
               <option value="">Select a Project</option>
-              {projects.map((project) => (
-                <option key={project._id} value={project._id}>
-                  {project.title}
-                </option>
-              ))}
+              {projects.length > 0 ? (
+                projects.map((project) => (
+                  <option key={project.title} value={project.title}>
+                    {project.title}
+                  </option>
+                ))
+              ) : (
+                <option value="">No projects available</option>
+              )}
             </select>
           </div>
 
@@ -72,13 +93,13 @@ export const TasksPage = () => {
             <ul className="list-group">
               {tasks.length > 0 ? (
                 tasks.map((task) => (
-                  <li key={task._id || task.id} className="list-group-item"> {/* Ensuring unique key */}
+                  <li key={task._id || task.id} className="list-group-item">
                     <ul style={{ listStyle: "none" }}>
                       <li><strong>Task Name:</strong> {task.title}</li>
                       <li><strong>Task Description:</strong> {task.description}</li>
                       <li><strong>Priority:</strong> {task.priority}</li>
                       <li><strong>Assigned to:</strong> {task.assignedTo}</li>
-                      <li><strong>Time Alloted (Minutes): </strong> {task.totalMinutes}</li>
+                      <li><strong>Time Alloted (Minutes):</strong> {task.totalMinutes}</li>
                     </ul>
                   </li>
                 ))

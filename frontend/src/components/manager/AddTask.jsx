@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../App';
 
 export const AddTask = () => {
   const { register, handleSubmit, setValue } = useForm();
-  const managerId = Cookies.get("managerId");
-  const navigate = useNavigate();
+  const managerId = Cookies.get("userId");
   const [projects, setProjects] = useState([]);
   const [modules, setModules] = useState([]);
+  const [statuses,setStatuses] = useState([])
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -31,7 +30,6 @@ export const AddTask = () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/modules/modules/${projectId}/modules-statuses/`);
       setModules(res.data.modules);  // Update modules based on the selected project
-      setStatuses('Assigned');  // Update statuses (if needed)
 
       // Set the default status to 'Assigned' after fetching statuses
       const assignedStatus = res.data.statuses.find(status => status.statusName === 'Assigned');
@@ -44,9 +42,9 @@ export const AddTask = () => {
   };
 
   const submitHandler = async (data) => {
-    data.role_id = managerId;
     data.totalMinutes = parseInt(data.totalMinutes, 10); // Ensure it's an integer
-
+    data.status_id = data.status;
+    
     try {
       const res = await axios.post(`${API_BASE_URL}/tasks/`, data);
       if (res.status === 200) {
@@ -61,6 +59,20 @@ export const AddTask = () => {
       alert("An error occurred. Please try again.");
     }
   };
+
+  // Fetch statuses from backend
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/status/statuss`);
+        setStatuses(res.data);  // Set statuses from API
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
 
   // Handle project selection
   const handleProjectChange = (e) => {
@@ -128,6 +140,21 @@ export const AddTask = () => {
             <div className="form-group">
               <label htmlFor="totalMinutes" className="form-label">Total Minutes</label>
               <input type="number" {...register("totalMinutes")} id="totalMinutes" className="form-control" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="status" className="form-label">Status</label>
+              <select
+                {...register("status")}  
+                id="status"
+                className="form-control"
+              >
+                <option value="">Select Status</option>
+                {statuses.map((status) => (
+                  <option key={status._id} value={status._id}>
+                    {status.statusName} 
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

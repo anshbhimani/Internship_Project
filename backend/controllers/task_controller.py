@@ -79,6 +79,7 @@ async def delete_task(task_id: str):
 
     return {"message": "Task deleted successfully"}
 
+
 # async def taskId_to_userId(task_id: str):
 #     result_cursor = await user_task_colection.find({"taskid": task_id})
 #     result = await result_cursor.to_list(length=None)
@@ -87,3 +88,40 @@ async def delete_task(task_id: str):
 #         raise HTTPException(status_code=404, detail="User for task not found")
 
 #     return result  
+
+async def get_tasks_for_developer(developer_id: str, project_id: str):
+    """Retrieve tasks for a developer in a specific project"""
+    try:
+        # Query user_tasks to find all tasks assigned to the developer
+        tasks_cursor = tasks_collection.find({"project_id": ObjectId(project_id)})
+        tasks = await tasks_cursor.to_list(length=None)
+
+        if not tasks:
+            raise HTTPException(status_code=404, detail="No tasks found for this project.")
+
+        # List to hold valid tasks for the developer
+        valid_tasks = []
+
+        for task in tasks:
+                task_id = str(task["_id"])  # Task ID
+                task_name = task["title"]  # Task Name
+
+                # Query the user_task_colection to find if this task is assigned to the developer
+                user_task_cursor = user_task_colection.find({"taskid": task_id, "userId": developer_id})
+                user_task = await user_task_cursor.to_list(length=1)
+
+                if user_task:
+                    # If the developer is assigned to this task, add the task to the valid tasks list
+                    task["_id"] = str(task["_id"])
+                    task["project_id"] = str(task["project_id"])
+                    task["module_id"] = str(task["module_id"])
+                    task["status_id"] = str(task["status_id"])
+                    valid_tasks.append(task)
+
+        if not valid_tasks:
+            raise HTTPException(status_code=404, detail="No tasks found for this developer.")
+
+        return valid_tasks
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

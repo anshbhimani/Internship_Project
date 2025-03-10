@@ -19,12 +19,15 @@ async def create_project_team(projectTeam: ProjectTeam):
         raise HTTPException(status_code=404, detail="Project not found")
 
     # Validate developers
+    developers_info = []
     for user_id in projectTeam_data["developers"]:
         user = await db["developers"].find_one({"_id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
 
     # Insert into project_team collection
+    projectTeam_data["developers"] = developers_info
     result = await db["project_team"].insert_one(projectTeam_data)
     return {"message": "Project team created successfully", "id": str(result.inserted_id)}
 
@@ -37,16 +40,10 @@ async def get_project_team(project_id: str):
     team = await db["project_team"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
-    
-    developers_info = []
-    for user_id in team["developers"]:
-        user = await db["users"].find_one({"_id": user_id}, {"_id": 1, "firstname": 1})
-        if user:
-            developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
-
+ 
     return {
         "projectId": str(team["projectId"]),
-        "developers": developers_info
+        "developers": team["developers"]
     }
 async def update_project_team(project_id: str, add_developers: List[str] = [], remove_developers: List[str] = []):
     try:
@@ -61,17 +58,24 @@ async def update_project_team(project_id: str, add_developers: List[str] = [], r
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
 
-    # Convert user ObjectIds to set for easier operations
-    current_developers = set(team.get("developers", []))
-    new_developers = current_developers.union(add_developers) - set(remove_developers)
+    new_developers_info = []
+    for user_id in add_developers:
+        user = await db["developers"].find_one({"_id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        new_developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
+        
+    current_developers = set([developer["id"] for developer in team.get("developers", [])])
+    add_developers_ids = set([dev["id"] for dev in new_developers_info])
+    updated_developers = list(current_developers.union(add_developers_ids) - set(remove_developers))
 
     # Update the team with the new user list
     await db["project_team"].update_one(
         {"projectId": project_id},
-        {"$set": {"developers": list(new_developers)}}
+        {"$set": {"developers": list(new_developers_info)}}  # Store both ID and name in developers
     )
 
-    return {"message": "Project team updated successfully", "developers": [str(user) for user in new_developers]}
+    return {"message": "Project team updated successfully", "developers": new_developers_info}
 
 async def delete_project_team(project_id: str):
     try:

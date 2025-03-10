@@ -16,6 +16,10 @@ async def createStatus(status: Status):
 async def getStatus(status_id: str):
     return await get_status(status_id)
 
+@router.get("/statuss", response_model=List[StatusOut])
+async def getAllStatus():
+    return await get_all_status()
+
 @router.put("/statuss/{status_id}", response_model=StatusOut)
 async def updateStatus(status_id: str, updated_status: Status):
     return await update_status(status_id,updated_status)

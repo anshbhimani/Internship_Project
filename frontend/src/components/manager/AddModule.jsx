@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Cookies from "js-cookie";
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../App';
 
 export const AddModule = () => {
   const { register, handleSubmit, reset } = useForm();
-  const managerId = Cookies.get("managerId");
-  const navigate = useNavigate();
+  const managerId = Cookies.get("userId");
   const [projects, setProjects] = useState([]);
+  const [statuses, setStatuses] = useState([]);
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -25,6 +24,20 @@ export const AddModule = () => {
     fetchProjects();
   }, [managerId]);
 
+  // Fetch statuses from backend
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/status/statuss`);
+        setStatuses(res.data);  // Set statuses from API
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
+
   // Form submit handler to add a module
   const submitHandler = async (data) => {
     const estimatedHours = parseInt(data.estimatedHours, 10);
@@ -39,7 +52,7 @@ export const AddModule = () => {
         moduleName: data.moduleName,
         description: data.description,
         estimatedHours: estimatedHours, 
-        status: data.status,
+        status: data.status,  // Send the status ID
         startDate: startDate,
       };
     console.log("Request data : ", requestData);
@@ -109,9 +122,11 @@ export const AddModule = () => {
                 className="form-control"
               >
                 <option value="">Select Status</option>
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
+                {statuses.map((status) => (
+                  <option key={status._id} value={status._id}>
+                    {status.statusName} 
+                  </option>
+                ))}
               </select>
             </div>
           </div>

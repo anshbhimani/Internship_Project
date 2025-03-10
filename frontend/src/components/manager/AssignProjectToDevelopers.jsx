@@ -11,7 +11,7 @@ const AssignProjectToDevelopers = () => {
   const [existingDevelopers, setExistingDevelopers] = useState([]); // Always default to empty array
   const [selectedProject, setSelectedProject] = useState(null);
 
-  const managerId = Cookies.get("managerId");
+  const managerId = Cookies.get("userId");
 
   useEffect(() => {
     if (!managerId) {

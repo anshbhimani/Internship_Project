@@ -21,8 +21,10 @@ export const Login = ({ setUserRole }) => {
       if (response.data.role) {
         setUserRole(response.data.role);
         
-        // Save managerId to cookies with 60-minute expiration
-        Cookies.set('managerId', response.data.user_id, { expires: 1/24 });
+        // Save userId to cookies with 60-minute expiration
+        Cookies.set('userId', response.data.user_id, { expires: 1/24 });
+        Cookies.set('role', response.data.role, { expires: 1/24 });
+        
 
         navigate(`/profile/${response.data.role}`);
       } else {

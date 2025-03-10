@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 export const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [developers, setDevelopers] = useState([]);
-  const managerId = Cookies.get("managerId");
+  const managerId = Cookies.get("userId");
 
   const fetchManagerProjects = async () => {
     try {
