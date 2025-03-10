@@ -4,7 +4,6 @@ from controllers.project_controller import create_project, get_all_projects,assi
 from models.project_model import Project
 from typing import List
 from pydantic import BaseModel
-from typing import List
 
 class AssignDevelopersRequest(BaseModel):
     developers: List[str]
