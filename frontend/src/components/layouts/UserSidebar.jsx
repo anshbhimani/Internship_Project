@@ -1,29 +1,41 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Cookies from "js-cookie";  // Import js-cookie
 import "./UserSidebar.css";
 
 export const UserSidebar = ({ userRole, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Extract active tab from URL
   const searchParams = new URLSearchParams(location.search);
   const activeTab = searchParams.get("tab");
+
+  const handleLogout = () => {
+    // Clear cookies on logout
+    Cookies.remove("userId");
+    Cookies.remove("role");
+    
+    localStorage.clear()
+    // Optionally, redirect the user to the login page
+    navigate("/login"); // Adjust the route if necessary
+    onLogout(); // Call the onLogout function to notify parent component (if needed)
+  };
 
   return (
     <div className={`sidebar bg-dark text-white p-3 ${isCollapsed ? "collapsed" : ""}`}>
       <button className="btn btn-light mb-3" onClick={() => setIsCollapsed(!isCollapsed)}>
         ⮞
       </button>
-      
 
       <ul className="list-unstyled">
-          <li>
-            <Link to={`/profile/${userRole}`} className={`d-block text-white p-2 ${activeTab === "addProject" ? "fw-bold" : ""}`}>
-                Home
-              </Link>
-          </li>
+        <li>
+          <Link to={`/profile/${userRole}`} className={`d-block text-white p-2 ${activeTab === "addProject" ? "fw-bold" : ""}`}>
+            Home
+          </Link>
+        </li>
         {userRole === "admin" && (
           <>
             <li>
@@ -32,7 +44,6 @@ export const UserSidebar = ({ userRole, onLogout }) => {
               </Link>
             </li>
           </>
-        
         )}
         {userRole === "manager" && (
           <>
@@ -76,7 +87,7 @@ export const UserSidebar = ({ userRole, onLogout }) => {
           </li>
         )}
         <li>
-          <button className="logout btn btn-danger mt-3" onClick={onLogout}>
+          <button className="logout btn btn-danger mt-3" onClick={handleLogout}>
             Logout
           </button>
         </li>

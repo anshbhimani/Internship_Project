@@ -92,36 +92,35 @@ async def delete_task(task_id: str):
 async def get_tasks_for_developer(developer_id: str, project_id: str):
     """Retrieve tasks for a developer in a specific project"""
     try:
-        # Query user_tasks to find all tasks assigned to the developer
-        tasks_cursor = tasks_collection.find({"project_id": ObjectId(project_id)})
+        # Step 1: Query user_tasks to get task_ids for the developer
+        user_tasks_cursor = user_task_colection.find({"userId": developer_id})
+        user_tasks = await user_tasks_cursor.to_list(length=None)
+
+        if not user_tasks:
+            raise HTTPException(status_code=404, detail="No tasks found for this developer.")
+
+        # Extract task_ids from user_tasks
+        task_ids = [str(user_task["taskid"]) for user_task in user_tasks]
+
+        # Step 2: Query tasks collection to get tasks for the given task_ids
+        tasks_cursor = tasks_collection.find({"_id": {"$in": [ObjectId(task_id) for task_id in task_ids]}})
         tasks = await tasks_cursor.to_list(length=None)
 
         if not tasks:
-            raise HTTPException(status_code=404, detail="No tasks found for this project.")
+            raise HTTPException(status_code=404, detail="No tasks found for the given task IDs.")
 
-        # List to hold valid tasks for the developer
-        valid_tasks = []
+        # Step 3: Filter tasks by project_id
+        filtered_tasks = [
+            {**task, "_id": str(task["_id"]), "project_id": str(task["project_id"]),
+             "module_id": str(task["module_id"]), "status_id": str(task["status_id"])}
+            for task in tasks if str(task["project_id"]) == project_id
+        ]
 
-        for task in tasks:
-                task_id = str(task["_id"])  # Task ID
-                task_name = task["title"]  # Task Name
+        if not filtered_tasks:
+            raise HTTPException(status_code=404, detail="No tasks found for this developer in the specified project.")
 
-                # Query the user_task_colection to find if this task is assigned to the developer
-                user_task_cursor = user_task_colection.find({"taskid": task_id, "userId": developer_id})
-                user_task = await user_task_cursor.to_list(length=1)
-
-                if user_task:
-                    # If the developer is assigned to this task, add the task to the valid tasks list
-                    task["_id"] = str(task["_id"])
-                    task["project_id"] = str(task["project_id"])
-                    task["module_id"] = str(task["module_id"])
-                    task["status_id"] = str(task["status_id"])
-                    valid_tasks.append(task)
-
-        if not valid_tasks:
-            raise HTTPException(status_code=404, detail="No tasks found for this developer.")
-
-        return valid_tasks
+        # Step 4: Return the filtered tasks
+        return filtered_tasks
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
