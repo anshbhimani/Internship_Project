@@ -42,7 +42,7 @@ export const TasksPage = () => {
         try {
           let res;
           if (role === "manager") {
-            res = await axios.get(`${API_BASE_URL}/tasks/${selectedProject.project_id}`);
+            res = await axios.get(`${API_BASE_URL}/tasks/${selectedProject._id}`);
           } else if (role === "developer") {
             res = await axios.get(`${API_BASE_URL}/tasks/developer/${userId}/${selectedProject.project_id}`);
           }

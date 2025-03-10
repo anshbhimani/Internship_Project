@@ -6,9 +6,10 @@ import { API_BASE_URL } from '../../App';
 import './AssignTask.css';
 
 export const AssignTask = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
   const managerId = Cookies.get("userId");
   const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [developers, setDevelopers] = useState([]);
 
   // Fetch projects and developers on component mount
@@ -35,14 +36,26 @@ export const AssignTask = () => {
     fetchDevelopers();
   }, [managerId]);
 
-  // Form submit handler to assign developers to a project
+  // Fetch tasks when project is selected
+  const fetchTasksForProject = async (projectId) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/projects/${projectId}/tasks`);
+      setTasks(res.data); // Set tasks related to the selected project
+      setValue("task_id", ""); // Reset task selection when changing project
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  // Form submit handler to assign developers to a task
   const submitHandler = async (data) => {
     const requestData = {
-      developers: data.developers,  // List of developer IDs
+      developers: data.developers, // List of developer IDs
+      taskId: data.task_id, // The task to assign developers to
     };
     console.log("Request data:", requestData);
     try {
-      const res = await axios.put(`${API_BASE_URL}/projects/${data.project_id}/assign-developers/${managerId}`, requestData); 
+      const res = await axios.put(`${API_BASE_URL}/tasks/${data.task_id}/assign-developers/${managerId}`, requestData);
       if (res.status === 200) {
         alert("Developers assigned successfully");
         reset(); // Clear the form fields after successful submission
@@ -57,15 +70,17 @@ export const AssignTask = () => {
 
   return (
     <div>
-      <h5>Assign Developers to Project</h5>
+      <h5>Assign Developers to Task</h5>
       <form onSubmit={handleSubmit(submitHandler)}>
         <div className="row">
           <div className="col-md-6">
+            {/* Project Dropdown */}
             <div className="form-group">
               <label>Project</label>
               <select
                 {...register("project_id", { required: true })}
                 className="form-control"
+                onChange={(e) => fetchTasksForProject(e.target.value)}
               >
                 <option value="">Select a Project</option>
                 {projects.map((project) => (
@@ -76,6 +91,23 @@ export const AssignTask = () => {
               </select>
             </div>
 
+            {/* Task Dropdown */}
+            <div className="form-group">
+              <label>Task</label>
+              <select
+                {...register("task_id", { required: true })}
+                className="form-control"
+              >
+                <option value="">Select a Task</option>
+                {tasks.map((task) => (
+                  <option key={task._id} value={task._id}>
+                    {task.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Developers Dropdown */}
             <div className="form-group">
               <label>Developers</label>
               <select

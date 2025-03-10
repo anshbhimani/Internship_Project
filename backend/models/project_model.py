@@ -3,7 +3,6 @@ from typing import Optional, List
 from bson import ObjectId
 
 class Project(BaseModel):
-    project_id: str
     title: str
     description: str
     technology: str
