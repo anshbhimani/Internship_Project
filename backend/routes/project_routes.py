@@ -46,3 +46,4 @@ async def get_project_developers(project_id: str):
 @router.delete("/projects/{project_id}/remove-developer/{developer_id}")
 async def remove_developer_from_project(project_id: str, developer_id: str):
     return await remove_developer(project_id, developer_id)
+

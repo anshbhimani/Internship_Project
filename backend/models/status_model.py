@@ -6,6 +6,7 @@ class Status(BaseModel):
 
 class StatusOut(Status):
     id: str = Field(alias='_id')
+    statusName: str
 
     @validator('id', pre=True, always=True)
     def convert_id(cls, v):

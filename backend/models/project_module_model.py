@@ -25,8 +25,14 @@ class ProjectModule(BaseModel):
             return v
         else:
             raise ValueError("Estimated Hours must be greater than zero")
-class ProjectModuleOut(ProjectModule):
+class ProjectModuleOut(BaseModel):
     moduleId: str = Field(alias='_id')
+    projectId: str
+    moduleName: str
+    description: str
+    estimatedHours: int
+    status: str
+    startDate: str
 
     @validator('moduleId', pre=True, always=True)
     def convert_moduleId(cls, v):
