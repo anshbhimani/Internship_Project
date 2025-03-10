@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-pydantic
-jose
-python-jose[cryptography]
-python-multipart
-bcrypt
-motor
