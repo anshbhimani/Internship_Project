@@ -3,8 +3,6 @@ from config.database import db
 from fastapi import HTTPException
 from typing import List
 from bson import ObjectId
-from fastapi import Request
-
 
 async def create_project(project: Project):
     # Admin creates a project without assigning developers

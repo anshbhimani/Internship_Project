@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field, validator
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any,List
 from bson import ObjectId
 
 class ProjectTeam(BaseModel):
     projectId: str
-    userId: str
+    managerId: str
+    developers: List[str] = []
 
 class ProjectTeamOut(ProjectTeam):
     project_team_id: str = Field(alias='_id')
