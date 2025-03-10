@@ -10,6 +10,7 @@ export const TasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [role, setRole] = useState(""); // Add role to handle developer/manager distinction
   const userId = Cookies.get("userId"); // Assuming you store developerId as well
+  const [userTaskAssignments, setUserTaskAssignments] = useState({}); // Store user-task assignments by taskId
 
   useEffect(() => {
     const userRole = Cookies.get('role'); // Assuming role is saved in cookies
@@ -46,7 +47,17 @@ export const TasksPage = () => {
           } else if (role === "developer") {
             res = await axios.get(`${API_BASE_URL}/tasks/developer/${userId}/${selectedProject.project_id}`);
           }
-          setTasks(res.data);
+          const taskList = res.data;
+
+          // Fetch user details for each task
+          const userAssignments = {};
+          for (let task of taskList) {
+            const userRes = await axios.get(`${API_BASE_URL}/user-tasks/task/${task._id}`);
+            userAssignments[task._id] = userRes.data.map(user => user.full_name);
+          }
+
+          setUserTaskAssignments(userAssignments); // Store the assignments by taskId
+          setTasks(taskList); // Set tasks after fetching user assignments
         } catch (error) {
           console.error("Error fetching tasks:", error);
         }
@@ -98,7 +109,7 @@ export const TasksPage = () => {
                       <li><strong>Task Name:</strong> {task.title}</li>
                       <li><strong>Task Description:</strong> {task.description}</li>
                       <li><strong>Priority:</strong> {task.priority}</li>
-                      <li><strong>Assigned to:</strong> {task.assignedTo}</li>
+                      <li><strong>Assigned to:</strong> {userTaskAssignments[task._id] ? userTaskAssignments[task._id].join(', ') : "Not assigned"}</li>
                       <li><strong>Time Alloted (Minutes):</strong> {task.totalMinutes}</li>
                     </ul>
                   </li>

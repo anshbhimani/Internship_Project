@@ -30,7 +30,38 @@ async def get_user_tasks(user_id: str):
     for task in tasks:
         task["_id"] = str(task["_id"])
 
+        # Fetch user details for assigned user
+        user = await db["users"].find_one({"_id": ObjectId(task["userId"])})
+        if user:
+            task["assignedTo"] = f"{user.get('firstname', '')} {user.get('lastname', '')}"  # Full name of the assigned user
+
     return tasks
+
+# Get all users assigned to a specific task
+async def get_users_by_task(task_id: str):
+    # Query the user_tasks collection to get users assigned to the task
+    user_tasks_cursor = db["user_tasks"].find({"taskId": task_id})
+    user_tasks = await user_tasks_cursor.to_list(length=None)
+
+    if not user_tasks:
+        raise HTTPException(status_code=404, detail="No users found for this task")
+
+    # For each user_task, get the user details
+    users = []
+    for user_task in user_tasks:
+        user = await db["users"].find_one({"_id": ObjectId(user_task["userId"])})
+        if user:
+            users.append({
+                "user_id": str(user["_id"]),
+                "firstname": user.get("firstname"),
+                "lastname": user.get("lastname"),
+                "full_name": f"{user.get('firstname', '')} {user.get('lastname', '')}"
+            })
+
+    if not users:
+        raise HTTPException(status_code=404, detail="No users found for this task")
+
+    return users
 
 # Remove a task assignment
 async def remove_task_assignment(user_task_id: str):

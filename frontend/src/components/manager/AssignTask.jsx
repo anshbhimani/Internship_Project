@@ -11,6 +11,7 @@ export const AssignTask = () => {
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [developers, setDevelopers] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null); // Now it's an object, not an array
 
   // Fetch projects and developers on component mount
   useEffect(() => {
@@ -37,9 +38,15 @@ export const AssignTask = () => {
   }, [managerId]);
 
   // Fetch tasks when project is selected
+  useEffect(() => {
+    if (selectedProject) {
+      fetchTasksForProject(selectedProject._id); // Fetch tasks for selected project
+    }
+  }, [selectedProject]); // Add selectedProject as dependency
+
   const fetchTasksForProject = async (projectId) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/projects/${projectId}/tasks`);
+      const res = await axios.get(`${API_BASE_URL}/tasks/${projectId}`); // Correct API endpoint
       setTasks(res.data); // Set tasks related to the selected project
       setValue("task_id", ""); // Reset task selection when changing project
     } catch (error) {
@@ -49,24 +56,32 @@ export const AssignTask = () => {
 
   // Form submit handler to assign developers to a task
   const submitHandler = async (data) => {
-    const requestData = {
-      developers: data.developers, // List of developer IDs
-      taskId: data.task_id, // The task to assign developers to
-    };
-    console.log("Request data:", requestData);
+    // Loop through the selected developers and send a POST request for each
     try {
-      const res = await axios.put(`${API_BASE_URL}/tasks/${data.task_id}/assign-developers/${managerId}`, requestData);
-      if (res.status === 200) {
-        alert("Developers assigned successfully");
-        reset(); // Clear the form fields after successful submission
-      } else {
-        alert("Developer assignment failed");
+      // Make multiple POST requests for each developer
+      for (let developerId of data.developers) {
+        const requestData = {
+          userId: developerId,  // Developer ID
+          taskId: data.task_id, // Task ID to assign
+        };
+  
+        const res = await axios.post(`${API_BASE_URL}/user-tasks/assign`, requestData);
+        
+        if (res.status === 200) {
+          console.log(`Developer ${developerId} assigned successfully`);
+        } else {
+          alert(`Developer ${developerId} assignment failed`);
+        }
       }
+      
+      alert("Developers assigned successfully");
+      reset(); // Clear the form fields after successful submission
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("An error occurred. Please try again.");
     }
   };
+  
 
   return (
     <div>
@@ -80,7 +95,10 @@ export const AssignTask = () => {
               <select
                 {...register("project_id", { required: true })}
                 className="form-control"
-                onChange={(e) => fetchTasksForProject(e.target.value)}
+                onChange={(e) => {
+                  const project = projects.find(p => p._id === e.target.value); 
+                  setSelectedProject(project); // Set the entire project object
+                }}
               >
                 <option value="">Select a Project</option>
                 {projects.map((project) => (

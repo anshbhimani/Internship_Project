@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from controllers.user_task_controller import assign_task, get_user_tasks, remove_task_assignment
+from controllers.user_task_controller import assign_task, get_user_tasks, remove_task_assignment, get_users_by_task
 from models.user_task_model import UserTask
 
 router = APIRouter(prefix="/user-tasks", tags=["User Tasks"])
@@ -9,12 +9,19 @@ router = APIRouter(prefix="/user-tasks", tags=["User Tasks"])
 async def assign_task_to_user(user_task: UserTask):
     return await assign_task(user_task)
 
-# Get all tasks assigned to a specific user
+# Get all tasks assigned to a specific user, including user details (like full name)
 @router.get("/{user_id}")
 async def fetch_user_tasks(user_id: str):
-    return await get_user_tasks(user_id)
+    tasks = await get_user_tasks(user_id)
+    # You may want to format the tasks here if needed
+    return tasks
 
 # Remove a task assignment
 @router.delete("/{user_task_id}")
 async def delete_user_task(user_task_id: str):
     return await remove_task_assignment(user_task_id)
+
+# Get all users assigned to a specific task, including user details (like full name)
+@router.get("/task/{task_id}")
+async def get_users_for_task(task_id: str):
+    return await get_users_by_task(task_id)
