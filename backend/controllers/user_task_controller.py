@@ -2,23 +2,20 @@ from fastapi import HTTPException
 from bson import ObjectId
 from config.database import db
 from models.user_task_model import UserTask
-import asyncio
 import smtplib
 from email.mime.text import MIMEText
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# import os
+import os
 
-# load_dotenv()
+load_dotenv()
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587 
 
-# GMAIL_USER = os.getenv("GMAIL_USER")
-# GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-GMAIL_USER = "python.project.smtp@gmail.com"
-GMAIL_APP_PASSWORD = "svprgfzdwigwkhih"  # Use an app password for security
-# print(os.getenv("GMAIL_USER"))  # Should print your email
-# print(os.getenv("GMAIL_APP_PASSWORD"))
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+print(os.getenv("GMAIL_USER"))  # Should print your email
+print(os.getenv("GMAIL_APP_PASSWORD"))
 
 async def send_task_assignment_email(user, task):
     """ Sends an email notification when a task is assigned. """
