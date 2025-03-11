@@ -29,9 +29,63 @@ async def send_task_assignment_email(user, task):
     print(f"Sending email to: {recipient_email}")
     # Create Email Message
 
-    body = f"Hello {user.get('firstname', 'User')},You have been assigned a new task: **{task.get('title')}**Description:{task.get('description', 'No description available')}Please complete the task within the deadline: {task.get('deadline', 'No deadline provided')}.Regards,Task Management Team"
+    body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }}
+        h2 {{
+            color: #333;
+            text-align: center;
+        }}
+        p {{
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+        }}
+        .task {{
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+        }}
+        .footer {{
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>New Task Assigned</h2>
+        <p>Hello <strong>{user.get('firstname', 'User')}</strong>,</p>
+        <p>You have been assigned a new task:</p>
+        <p class="task">{task.get('title')}</p>
+        <p><strong>Description:</strong> {task.get('description', 'No description available')}</p>
+        <p><strong>Deadline:</strong> {task.get('deadline', 'No deadline provided')}</p>
+        <p>Please complete the task within the given deadline.</p>
+        <p class="footer">Regards,<br>Task Management Team</p>
+    </div>
+</body>
+</html>
+"""
 
-    msg = MIMEText(body)
+    msg = MIMEText(body, "html")
+
     msg['Subject'] = "New Task Assigned"
     msg['From'] = GMAIL_USER
     msg['To'] = recipient_email
