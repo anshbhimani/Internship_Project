@@ -29,6 +29,13 @@ export const TasksPage = () => {
   const [userTaskAssignments, setUserTaskAssignments] = useState({});
   const [taskModules, setTaskModules] = useState({});
   const userId = Cookies.get("userId");
+  const priorityColors = {
+    5: "#e63d37", // High priority (red)
+    4: "#d19630", // Orange
+    3: "#dbba14", // Yellow
+    2: "#3be392", // Green
+    1: "#a2d6de ", // Low priority (blue)
+  };
 
   const handleDeassign = async (taskId, userId) => {
     if (
@@ -210,130 +217,129 @@ export const TasksPage = () => {
           {/* Task List */}
           {selectedProject && (
             <Grid2 item xs={12}>
-              {tasks.length > 0 ? (
-                tasks.map((task) => (
-                  <Card
-                    key={task._id}
-                    sx={{
-                      boxShadow: 4,
-                      borderRadius: 3,
-                      mb: 3,
-                      backgroundColor: "#f9f9f9",
-                      transition: "0.3s",
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                        boxShadow: 6,
-                      },
-                    }}
-                  >
-                    <CardHeader
-                      title={
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: "bold", color: "#0d47a1" }}
-                        >
-                          {task.title}
-                        </Typography>
-                      }
-                      subheader={
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold", color: "#ff5722" }}
-                        >
-                          Priority: {task.priority}
-                        </Typography>
-                      }
+              <Grid2 container spacing={3}>
+                {tasks.length > 0 ? (
+                  tasks.map((task) => (
+                    <Card
+                      key={task._id}
                       sx={{
-                        backgroundColor:
-                          task.priority === "High"
-                            ? "#ffebee"
-                            : task.priority === "Medium"
-                            ? "#fff3e0"
-                            : "#e8f5e9",
+                        boxShadow: 4,
+                        borderRadius: 3,
+                        mb: 3,
+                        backgroundColor: priorityColors[task.priority] || "#f9f9f9",
+                        transition: "0.3s",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          boxShadow: 6,
+                        },
                       }}
-                    />
-                    <CardContent>
-                      <Typography variant="body2">
-                        <strong>Description:</strong> {task.description}
-                      </Typography>
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        <strong>Assigned to:</strong>
-                        <span>
-                          {userTaskAssignments[task._id]?.length > 0
-                            ? userTaskAssignments[task._id].map((user) => (
-                                <Chip
-                                  key={user._id}
-                                  label={user.full_name} // Now full_name exists
-                                  onDelete={() => handleDeassign(task._id, user._id)}
-                                  sx={{
-                                    m: 0.5,
-                                    backgroundColor: "#ff9800",
-                                    color: "white",
-                                    "& .MuiChip-deleteIcon": {
-                                      color: "#d32f2f",
-                                    },
-                                  }}
-                                />
-                              ))
-                            : "Not assigned"}
-                        </span>
-                      </Typography>
-
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
-                        minutes
-                      </Typography>
-                    </CardContent>
-
-                    {/* Module Details */}
-                    <Accordion sx={{ backgroundColor: "#f5f5f5" }}>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold", color: "#1565c0" }}
-                        >
-                          Module Details
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Chip
-                          label={taskModules[task._id] || "Loading..."}
-                          sx={{
-                            backgroundColor: "#4caf50",
-                            color: "white",
-                            fontWeight: "bold",
-                          }}
-                        />
-                      </AccordionDetails>
-                    </Accordion>
-
-                    {/* More Details */}
-                    <Accordion sx={{ backgroundColor: "#e3f2fd" }}>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "bold", color: "#1565c0" }}
-                        >
-                          More Details
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
+                    >
+                      <CardHeader
+                        title={
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: "bold", color: "#0d47a1" }}
+                          >
+                            {task.title}
+                          </Typography>
+                        }
+                        subheader={
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold", color: "#ff5722" }}
+                          >
+                            Priority: {task.priority}
+                          </Typography>
+                        }
+                        sx={{
+                          backgroundColor:
+                            task.priority === "High"
+                              ? "#ffebee"
+                              : task.priority === "Medium"
+                              ? "#fff3e0"
+                              : "#e8f5e9",
+                        }}
+                      />
+                      <CardContent>
                         <Typography variant="body2">
-                          <strong>Deadline:</strong>{" "}
-                          {task.deadline || "Not set"}
+                          <strong>Description:</strong> {task.description}
                         </Typography>
-                        <Typography variant="body2">
-                          <strong>Status:</strong> {task.status || "Pending"}
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          <strong>Assigned to:</strong>
+                          <span>
+                            {userTaskAssignments[task._id]?.length > 0
+                              ? userTaskAssignments[task._id].map((user) => (
+                                  <Chip
+                                    key={user._id}
+                                    label={user.full_name} // Now full_name exists
+                                    onDelete={() => handleDeassign(task._id, user._id)}
+                                    sx={{
+                                      m: 0.5,
+                                      backgroundColor: "#ff9800",
+                                      color: "white",
+                                      "& .MuiChip-deleteIcon": {
+                                        color: "#d32f2f",
+                                      },
+                                    }}
+                                  />
+                                ))
+                              : "Not assigned"}
+                          </span>
                         </Typography>
-                      </AccordionDetails>
-                    </Accordion>
-                  </Card>
-                ))
-              ) : (
-                <Typography variant="h6" sx={{ textAlign: "center", mt: 3 }}>
-                  No tasks available for this project.
-                </Typography>
-              )}
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
+                          minutes
+                        </Typography>
+                      </CardContent>
+                      {/* Module Details */}
+                      <Accordion sx={{ backgroundColor: "#f5f5f5" }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold", color: "#1565c0" }}
+                          >
+                            Module Details
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Chip
+                            label={taskModules[task._id] || "Loading..."}
+                            sx={{
+                              backgroundColor: "#4caf50",
+                              color: "white",
+                              fontWeight: "bold",
+                            }}
+                          />
+                        </AccordionDetails>
+                      </Accordion>
+                      {/* More Details */}
+                      <Accordion sx={{ backgroundColor: "#e3f2fd" }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold", color: "#1565c0" }}
+                          >
+                            More Details
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Typography variant="body2">
+                            <strong>Deadline:</strong>{" "}
+                            {task.deadline || "Not set"}
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>Status:</strong> {task.status || "Pending"}
+                          </Typography>
+                        </AccordionDetails>
+                      </Accordion>
+                    </Card>
+                  ))
+                ) : (
+                  <Typography variant="h6" sx={{ textAlign: "center", mt: 3 }}>
+                    No tasks available for this project.
+                  </Typography>
+                )}
+              </Grid2>
             </Grid2>
           )}
         </>
