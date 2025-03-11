@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from config.database import db
+<<<<<<< HEAD
 from models.user_task_model import UserTask
 import asyncio
 import smtplib
@@ -47,6 +48,10 @@ async def send_task_assignment_email(user, task):
         print(f"Failed to send email: {e}")
 
         
+=======
+from models.user_task_model import UserTask, UserTaskOut
+
+>>>>>>> a20bb89adb9b8e7c00bf257cfa82572a875524c0
 # Assign a task to a user
 async def assign_task(user_task: UserTask):
     # Ensure user exists
