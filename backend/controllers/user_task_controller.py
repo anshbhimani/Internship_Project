@@ -1,51 +1,8 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from config.database import db
-from models.user_task_model import UserTask
-import smtplib
-from email.mime.text import MIMEText
-from dotenv import load_dotenv
+from models.user_task_model import UserTask, UserTaskOut
 
-import os
-
-load_dotenv()
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587 
-
-GMAIL_USER = os.getenv("GMAIL_USER")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-print(os.getenv("GMAIL_USER"))  # Should print your email
-print(os.getenv("GMAIL_APP_PASSWORD"))
-
-async def send_task_assignment_email(user, task):
-    """ Sends an email notification when a task is assigned. """
-    
-    recipient_email = user.get("email")  # Fetch user email
-    if not recipient_email:
-        raise HTTPException(status_code=400, detail="User email not found")
-
-    recipient_email = str(recipient_email)
-    print(f"Sending email to: {recipient_email}")
-    # Create Email Message
-
-    body = f"Hello {user.get('firstname', 'User')},You have been assigned a new task: **{task.get('title')}**Description:{task.get('description', 'No description available')}Please complete the task within the deadline: {task.get('deadline', 'No deadline provided')}.Regards,Task Management Team"
-
-    msg = MIMEText(body)
-    msg['Subject'] = "New Task Assigned"
-    msg['From'] = GMAIL_USER
-    msg['To'] = recipient_email
-
-    try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        server.sendmail(GMAIL_USER, recipient_email, msg.as_string())  # ✅ Fix applied
-        server.quit()
-        print("Email sent successfully!!")
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-
-        
 # Assign a task to a user
 async def assign_task(user_task: UserTask):
     # Ensure user exists
