@@ -40,7 +40,7 @@ export const TasksPage = () => {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/user-tasks/${taskId}/${userId}`,
+        `${API_BASE_URL}/user-tasks/${userId}/${taskId}`,
         {
           method: "DELETE",
         }
@@ -111,7 +111,10 @@ export const TasksPage = () => {
               const userRes = await axios.get(
                 `${API_BASE_URL}/user-tasks/task/${task._id}`
               );
-              userAssignments[task._id] = userRes.data; // Store full user objects
+              userAssignments[task._id] = userRes.data.map((user) => ({
+                _id: user.user_id, // Ensure this exists
+                full_name: user.full_name, // Ensure this exists
+              })); // Store full user objects
             } catch (error) {
               console.error(`Error fetching users for task ${task._id}:`, error);
             }
