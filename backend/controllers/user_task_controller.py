@@ -165,9 +165,10 @@ async def get_users_by_task(task_id: str):
 
     return users
 
-# Remove a task assignment
-async def remove_task_assignment(user_task_id: str):
-    result = await db["user_tasks"].delete_one({"_id": ObjectId(user_task_id)})
+# Remove a task assignment for a specific user
+async def remove_task_assignment(user_id: str, task_id: str):
+    result = await db["user_tasks"].delete_one({"userId": user_id, "taskId": task_id})
+    
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task assignment not found")
 

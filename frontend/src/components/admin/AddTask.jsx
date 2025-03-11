@@ -11,19 +11,19 @@ export const AddTask = () => {
   const [modules, setModules] = useState([]);
   const [statuses,setStatuses] = useState([])
 
-  // Fetch projects on component mount
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/projects/`
+      );
+      setProjects(response.data || []); // Ensure it's an array
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/managers/${managerId}/projects/`);
-        setProjects(res.data); // Set projects from API
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-
     fetchProjects();
-  }, [managerId]);
+  });
 
   // Fetch modules and statuses when a project is selected
   const fetchModulesAndStatuses = async (projectId) => {

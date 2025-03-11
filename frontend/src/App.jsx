@@ -8,8 +8,8 @@ import { ProjectForm } from "./components/admin/ProjectForm";
 import { ManagerDashboard } from "./components/manager/ManagerDashboard";
 import { ErrorPage } from "./components/Error/ErrorPage";
 import { TasksPage } from "./components/common/Tasks";
-import { AddTask } from "./components/manager/AddTask";
-import { AddModule } from "./components/manager/AddModule"; // Import AddModule
+import { AddTask } from "./components/admin/AddTask";
+import { AddModule } from "./components/admin/AddModule"; // Import AddModule
 import { AssignTask } from "./components/manager/AssignTask";
 
 export const API_BASE_URL = "http://localhost:6565";

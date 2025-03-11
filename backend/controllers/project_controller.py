@@ -1,7 +1,6 @@
 from models.project_model import Project,ProjectOut
 from config.database import project_collection,user_collection,tasks_collection
 from fastapi import HTTPException
-from typing import List
 from bson import ObjectId
 
 async def create_project(project: Project):
@@ -153,45 +152,6 @@ async def get_projects_by_manager(manager_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
-async def assign_developers(project_id: str, manager_id: str, developers: List[str]):
-    # Validate project existence
-    project = await project_collection.find_one({"_id": ObjectId(project_id)})
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    # Validate project manager
-    project_manager = await user_collection.find_one({"email": project["manager_email"], "role": "manager"})
-    if not project_manager:
-        raise HTTPException(status_code=404, detail="Project manager not found")
-
-    # Ensure the requesting manager is the same as the project manager
-    if str(project_manager["_id"]) != manager_id:
-        raise HTTPException(status_code=403, detail="Only the assigned manager can assign developers")
-
-    # Convert developer IDs to ObjectId
-    developer_ids = [ObjectId(dev) for dev in developers]
-
-    # Fetch developers and validate their manager
-    assigned_developers = await user_collection.find({"_id": {"$in": developer_ids}, "role": "developer"}).to_list(None)
-
-    if len(assigned_developers) != len(developer_ids):
-        raise HTTPException(status_code=400, detail="Some developers not found")
-
-    # Ensure all developers have the same manager as the project
-    for dev in assigned_developers:
-        if "manager_id" not in dev or str(dev["manager_id"]) != manager_id:
-            raise HTTPException(status_code=400, detail="One or more developers do not belong to this manager")
-
-    # Append new developers to the project (avoid duplicates)
-    updated_developers = list(set(project["developers"] + developer_ids))
-
-    await project_collection.update_one(
-        {"_id": ObjectId(project_id)},
-        {"$set": {"developers": updated_developers}}
-    )
-
-    return {"message": "Developers assigned successfully"}
 
 async def get_developers_by_manager(manager_id: str):
     # Validate manager_id format

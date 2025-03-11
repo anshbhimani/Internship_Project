@@ -16,10 +16,9 @@ async def fetch_user_tasks(user_id: str):
     # You may want to format the tasks here if needed
     return tasks
 
-# Remove a task assignment
-@router.delete("/{user_task_id}")
-async def delete_user_task(user_task_id: str):
-    return await remove_task_assignment(user_task_id)
+@router.delete("/{user_id}/{task_id}")
+async def deassign_task_from_user(user_id: str, task_id: str):
+    return await remove_task_assignment(user_id, task_id)
 
 # Get all users assigned to a specific task, including user details (like full name)
 @router.get("/task/{task_id}")

@@ -19,10 +19,10 @@ const AssignProjectToDevelopers = () => {
       return;
     }
 
-    const fetchManagerProjects = async () => {
+    const fetchProjects = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/managers/${managerId}/projects/`
+          `${API_BASE_URL}/projects/`
         );
         setProjects(response.data || []); // Ensure it's an array
       } catch (error) {
@@ -33,7 +33,7 @@ const AssignProjectToDevelopers = () => {
     const fetchDevelopers = async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/managers/${managerId}/developers`
+          `${API_BASE_URL}/admin/developers`
         );
         setDevelopers(response.data || []);
       } catch (error) {
@@ -41,7 +41,7 @@ const AssignProjectToDevelopers = () => {
       }
     };
 
-    fetchManagerProjects();
+    fetchProjects();
     fetchDevelopers();
   }, [managerId]);
 
@@ -74,7 +74,7 @@ const AssignProjectToDevelopers = () => {
 
     try {
       await axios.put(
-        `${API_BASE_URL}/projects/${selectedProject.value}/assign-developers/${managerId}`,
+        `${API_BASE_URL}/admin/projects/${selectedProject.value}/assign-developers/${managerId}`,
         { developers: developerIds },
         {
           headers: { "Content-Type": "application/json" },

@@ -1,13 +1,8 @@
 # routes/project_routes.py
 from fastapi import APIRouter,Body
-from controllers.project_controller import create_project, get_all_projects,assign_developers,get_project,assign_manager_to_project,get_projects_by_manager,get_developers_by_manager,get_assigned_developers,remove_developer,get_developer_projects
+from controllers.project_controller import create_project, get_all_projects,get_project,assign_manager_to_project,get_projects_by_manager,get_developers_by_manager,get_assigned_developers,remove_developer,get_developer_projects
 from models.project_model import Project
 from typing import List
-from pydantic import BaseModel
-
-class AssignDevelopersRequest(BaseModel):
-    developers: List[str]
-
 
 router = APIRouter(tags=["Projects"])
 
@@ -35,9 +30,6 @@ async def assign_manager(project_id: str, manager_id: str,developers: List[str] 
 async def get_developers_by_managers_route(manager_id: str):
     return await get_developers_by_manager(manager_id)
 
-@router.put("/projects/{project_id}/assign-developers/{manager_id}")
-async def assign_developers_to_project(project_id: str, manager_id: str, request: AssignDevelopersRequest):
-    return await assign_developers(project_id, manager_id, request.developers)
 
 @router.get("/projects/{project_id}/developers")
 async def get_project_developers(project_id: str):

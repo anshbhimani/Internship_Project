@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { AddTask } from "./AddTask";
 import { TasksPage } from "../common/Tasks";
-import AssignProjectToDevelopers from "./AssignProjectToDevelopers";
 import axios from "axios";
 import { API_BASE_URL } from "../../App";
 import Cookies from "js-cookie";
 import { Projects } from "./Projects";
 import { AssignTask } from "./AssignTask";
-import { AddModule } from "./AddModule";
+
 
 export const ManagerDashboard = () => {
   const location = useLocation();
-  const [projects, setProjects] = useState([]);
   
   // Extract tab name from URL search params
   const searchParams = new URLSearchParams(location.search);
@@ -20,6 +17,7 @@ export const ManagerDashboard = () => {
 
   // Retrieve managerId from cookies
   const managerId = Cookies.get("userId");
+  const [projects, setProjects] = useState([]);
 
   const fetchManagerProjects = async () => {
     try {
@@ -60,12 +58,9 @@ export const ManagerDashboard = () => {
       
       {/* Render the selected component */}
       <div className="mt-4">
-        {activeTab === "addDevelopers" && <AssignProjectToDevelopers />}
-        {activeTab === "addTask" && <AddTask />}
         {activeTab === "viewTasks" && <TasksPage />}
         {activeTab === "viewProjects" && <Projects/>}
         {activeTab === "assignTask" && <AssignTask/>}
-        {activeTab === "addModule" && <AddModule/>}
       </div>
     </div>
   );

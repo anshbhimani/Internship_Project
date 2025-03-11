@@ -43,18 +43,9 @@ export const UserSidebar = ({ userRole, onLogout }) => {
                 Add Project
               </Link>
             </li>
-          </>
-        )}
-        {userRole === "manager" && (
-          <>
             <li>
               <Link to="?tab=addDevelopers" className={`d-block text-white p-2 ${activeTab === "addDevelopers" ? "fw-bold" : ""}`}>
                 Add Developers
-              </Link>
-            </li>
-            <li>
-              <Link to="?tab=viewProjects" className={`d-block text-white p-2 ${activeTab === "viewProjects" ? "fw-bold" : ""}`}>
-                View Projects
               </Link>
             </li>
             <li>
@@ -65,6 +56,16 @@ export const UserSidebar = ({ userRole, onLogout }) => {
             <li>
               <Link to="?tab=addTask" className={`d-block text-white p-2 ${activeTab === "addTask" ? "fw-bold" : ""}`}>
                 Add Task
+              </Link>
+            </li>
+          </>
+        )}
+        {userRole === "manager" && (
+          <>
+            
+            <li>
+              <Link to="?tab=viewProjects" className={`d-block text-white p-2 ${activeTab === "viewProjects" ? "fw-bold" : ""}`}>
+                View Projects
               </Link>
             </li>
             <li>

@@ -1,139 +1,340 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { API_BASE_URL } from "../../App";
 import Cookies from "js-cookie";
+import { API_BASE_URL } from "../../App";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Grid2,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Select,
+  MenuItem,
+  FormControl,
+  Button,
+  CircularProgress,
+  Chip,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export const TasksPage = () => {
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(""); // Now it's just a string (project title)
+  const [selectedProject, setSelectedProject] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const [role, setRole] = useState(""); // Add role to handle developer/manager distinction
-  const userId = Cookies.get("userId"); // Assuming you store developerId as well
-  const [userTaskAssignments, setUserTaskAssignments] = useState({}); // Store user-task assignments by taskId
+  const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [userTaskAssignments, setUserTaskAssignments] = useState({});
   const [taskModules, setTaskModules] = useState({});
+  const userId = Cookies.get("userId");
 
-  useEffect(() => {
-    const userRole = Cookies.get('role'); // Assuming role is saved in cookies
-    setRole(userRole); // Set the role of the user (either manager or developer)
-    console.log("User Role : ", userRole);
-    
-    const fetchProjects = async () => {
-      try {
-        let res;
-        if (userRole === "manager") {
-          res = await axios.get(`${API_BASE_URL}/managers/${userId}/projects/`);
-        } else if (userRole === "developer") {
-          res = await axios.get(`${API_BASE_URL}/developer/${userId}/`);
+  const handleDeassign = async (taskId, userId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to deassign this user from the task?"
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/user-tasks/${taskId}/${userId}`,
+        {
+          method: "DELETE",
         }
+      );
 
-        console.log(res.data);
-        setProjects(res.data); // Set the projects based on the user role
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-    fetchProjects();
-  }, [userId, role]);
+      if (!response.ok) throw new Error("Failed to deassign user from task");
 
-  useEffect(() => {
-    if (selectedProject) {
-      console.log("Selected Project : ", selectedProject);
+      alert("User deassigned successfully!");
 
-      const fetchTasks = async () => {
-        try {
-          let res;
-          if (role === "manager") {
-            res = await axios.get(`${API_BASE_URL}/tasks/${selectedProject._id}`);
-          } else if (role === "developer") {
-            res = await axios.get(`${API_BASE_URL}/tasks/developer/${userId}/${selectedProject.project_id}`);
-          }
-          const taskList = res.data;
-
-          // Fetch user details for each task
-          const userAssignments = {};
-          for (let task of taskList) {
-            const userRes = await axios.get(`${API_BASE_URL}/user-tasks/task/${task._id}`);
-            userAssignments[task._id] = userRes.data.map(user => user.full_name);
-            
-            if (task.module_id) {
-              try {
-                const moduleRes = await axios.get(`${API_BASE_URL}/modules/modules/${task.module_id}`);
-                taskModules[task._id] = moduleRes.data.moduleName;
-              } catch (moduleError) {
-                console.error(`Error fetching module for task ${task._id}:`, moduleError);
-                taskModules[task._id] = "Unknown Module"; // Default if error occurs
-              }
-            }
-          }
-
-          setUserTaskAssignments(userAssignments); // Store the assignments by taskId
-          setTasks(taskList); // Set tasks after fetching user assignments
-          setTaskModules(taskModules); 
-        } catch (error) {
-          console.error("Error fetching tasks:", error);
-        }
-      };
-      fetchTasks();
+      // Update UI by removing only the specific user from the task
+      setUserTaskAssignments((prevAssignments) => {
+        const updatedAssignments = { ...prevAssignments };
+        updatedAssignments[taskId] = updatedAssignments[taskId]?.filter(
+          (user) => user._id !== userId
+        );
+        return updatedAssignments;
+      });
+    } catch (error) {
+      console.error("Error deassigning user from task:", error);
+      alert("Failed to deassign user from task");
     }
-  }, [selectedProject, role, userId]);
-
-  const handleProjectChange = (e) => {
-    const selected = projects.find(project => project.title === e.target.value); 
-    setSelectedProject(selected); // Store the entire project object
   };
 
+  useEffect(() => {
+    const userRole = Cookies.get("role");
+    setRole(userRole);
+
+    const fetchProjects = async () => {
+      try {
+        const url =
+          userRole === "manager"
+            ? `${API_BASE_URL}/managers/${userId}/projects/`
+            : `${API_BASE_URL}/developer/${userId}/`;
+        const response = await axios.get(url);
+        setProjects(response.data);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const url =
+          role === "manager"
+            ? `${API_BASE_URL}/tasks/${selectedProject._id}`
+            : `${API_BASE_URL}/tasks/developer/${userId}/${selectedProject._id}`;
+    
+        const res = await axios.get(url);
+        const taskList = res.data;
+        setTasks(taskList);
+    
+        // Fetch task details (assigned users & modules)
+        const userAssignments = {};
+        const moduleMappings = {};
+    
+        await Promise.all(
+          taskList.map(async (task) => {
+            try {
+              const userRes = await axios.get(
+                `${API_BASE_URL}/user-tasks/task/${task._id}`
+              );
+              userAssignments[task._id] = userRes.data; // Store full user objects
+            } catch (error) {
+              console.error(`Error fetching users for task ${task._id}:`, error);
+            }
+    
+            if (task.module_id) {
+              try {
+                const moduleRes = await axios.get(
+                  `${API_BASE_URL}/modules/modules/${task.module_id}`
+                );
+                moduleMappings[task._id] = moduleRes.data.moduleName;
+              } catch (error) {
+                console.error(`Error fetching module for task ${task._id}:`, error);
+                moduleMappings[task._id] = "Unknown Module";
+              }
+            }
+          })
+        );
+    
+        setUserTaskAssignments(userAssignments);
+        setTaskModules(moduleMappings);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+
+    fetchTasks();
+  }, [selectedProject, role, userId]);
+
   return (
-    <div className="container mt-4">
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h2 className="card-title text-center mb-3">Tasks</h2>
-
-          {/* Dropdown to select a project */}
-          <div className="form-group mb-3">
-            <label htmlFor="projectSelect">Select Project</label>
-            <select
-              id="projectSelect"
-              className="form-control"
-              value={selectedProject.title || ""} // Set the value to selectedProject's title
-              onChange={handleProjectChange}
+    <Grid2 container spacing={3} sx={{ p: 3 }}>
+      {loading ? (
+        <Grid2 item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Grid2>
+      ) : (
+        <>
+          {/* Project Selection Dropdown */}
+          <Grid2 item xs={12} sx={{ mb: 2 }}>
+            <FormControl
+              fullWidth
+              sx={{
+                backgroundColor: "#ffffff",
+                borderRadius: 2,
+                boxShadow: 2,
+                p: 1,
+                "& .MuiInputBase-root": {
+                  borderRadius: 2,
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#1565c0",
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#0d47a1",
+                },
+                transition: "0.3s",
+              }}
             >
-              <option value="">Select a Project</option>
-              {projects.length > 0 ? (
-                projects.map((project) => (
-                  <option key={project.title} value={project.title}>
+              <Select
+                value={selectedProject ? selectedProject._id : ""}
+                onChange={(e) => {
+                  const project = projects.find(
+                    (proj) => proj._id === e.target.value
+                  );
+                  setSelectedProject(project);
+                }}
+                displayEmpty
+              >
+                <MenuItem disabled value="">
+                  <em>Select a project</em>
+                </MenuItem>
+                {projects.map((project) => (
+                  <MenuItem
+                    key={project._id}
+                    value={project._id}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "#bbdefb",
+                      },
+                    }}
+                  >
                     {project.title}
-                  </option>
-                ))
-              ) : (
-                <option value="">No projects available</option>
-              )}
-            </select>
-          </div>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid2>
 
-          {/* Display tasks for the selected project */}
+          {/* Task List */}
           {selectedProject && (
-            <ul className="list-group">
+            <Grid2 item xs={12}>
               {tasks.length > 0 ? (
                 tasks.map((task) => (
-                  <li key={task._id || task.id} className="list-group-item">
-                    <ul style={{ listStyle: "none" }}>
-                      <li><strong>Task Name:</strong> {task.title}</li>
-                      <li><strong>Task Description:</strong> {task.description}</li>
-                      <li><strong>Priority:</strong> {task.priority}</li>
-                      <li><strong>Module:</strong> {taskModules[task._id] || "Loading..."}</li> 
-                      <li><strong>Assigned to:</strong> {userTaskAssignments[task._id] ? userTaskAssignments[task._id].join(', ') : "Not assigned"}</li>
-                      <li><strong>Time Alloted (Minutes):</strong> {task.totalMinutes}</li>
-                    </ul>
-                  </li>
+                  <Card
+                    key={task._id}
+                    sx={{
+                      boxShadow: 4,
+                      borderRadius: 3,
+                      mb: 3,
+                      backgroundColor: "#f9f9f9",
+                      transition: "0.3s",
+                      "&:hover": {
+                        transform: "scale(1.02)",
+                        boxShadow: 6,
+                      },
+                    }}
+                  >
+                    <CardHeader
+                      title={
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#0d47a1" }}
+                        >
+                          {task.title}
+                        </Typography>
+                      }
+                      subheader={
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: "bold", color: "#ff5722" }}
+                        >
+                          Priority: {task.priority}
+                        </Typography>
+                      }
+                      sx={{
+                        backgroundColor:
+                          task.priority === "High"
+                            ? "#ffebee"
+                            : task.priority === "Medium"
+                            ? "#fff3e0"
+                            : "#e8f5e9",
+                      }}
+                    />
+                    <CardContent>
+                      <Typography variant="body2">
+                        <strong>Description:</strong> {task.description}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Assigned to:</strong>
+                        <span>
+                          {userTaskAssignments[task._id]?.length > 0
+                            ? userTaskAssignments[task._id].map((user) => (
+                                <Chip
+                                  key={user._id}
+                                  label={user.full_name} // Now full_name exists
+                                  onDelete={() => handleDeassign(task._id, user._id)}
+                                  sx={{
+                                    m: 0.5,
+                                    backgroundColor: "#ff9800",
+                                    color: "white",
+                                    "& .MuiChip-deleteIcon": {
+                                      color: "#d32f2f",
+                                    },
+                                  }}
+                                />
+                              ))
+                            : "Not assigned"}
+                        </span>
+                      </Typography>
+
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
+                        minutes
+                      </Typography>
+                    </CardContent>
+
+                    {/* Module Details */}
+                    <Accordion sx={{ backgroundColor: "#f5f5f5" }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: "bold", color: "#1565c0" }}
+                        >
+                          Module Details
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Chip
+                          label={taskModules[task._id] || "Loading..."}
+                          sx={{
+                            backgroundColor: "#4caf50",
+                            color: "white",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </AccordionDetails>
+                    </Accordion>
+
+                    {/* More Details */}
+                    <Accordion sx={{ backgroundColor: "#e3f2fd" }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: "bold", color: "#1565c0" }}
+                        >
+                          More Details
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Typography variant="body2">
+                          <strong>Deadline:</strong>{" "}
+                          {task.deadline || "Not set"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Status:</strong> {task.status || "Pending"}
+                        </Typography>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Card>
                 ))
               ) : (
-                <li className="list-group-item">No tasks available for this project.</li>
+                <Typography variant="h6" sx={{ textAlign: "center", mt: 3 }}>
+                  No tasks available for this project.
+                </Typography>
               )}
-            </ul>
+            </Grid2>
           )}
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Grid2>
   );
 };

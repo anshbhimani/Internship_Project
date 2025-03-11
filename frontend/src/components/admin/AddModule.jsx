@@ -10,19 +10,20 @@ export const AddModule = () => {
   const [projects, setProjects] = useState([]);
   const [statuses, setStatuses] = useState([]);
 
-  // Fetch projects on component mount
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/managers/${managerId}/projects/`);
-        setProjects(res.data); // Set projects from API
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/projects/`
+      );
+      setProjects(response.data || []); // Ensure it's an array
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchProjects();
-  }, [managerId]);
+  });
 
   // Fetch statuses from backend
   useEffect(() => {
