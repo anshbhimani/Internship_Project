@@ -15,8 +15,6 @@ SMTP_PORT = 587
 
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-print(os.getenv("GMAIL_USER"))  # Should print your email
-print(os.getenv("GMAIL_APP_PASSWORD"))
 
 async def send_task_assignment_email(user, task):
     """ Sends an email notification when a task is assigned. """
