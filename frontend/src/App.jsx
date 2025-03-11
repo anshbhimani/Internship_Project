@@ -26,7 +26,9 @@ function App() {
 
   const handleLogout = () => {
     setUserRole(null); // Clear role
-    localStorage.removeItem("userRole"); // Remove role from storage
+    localStorage.removeItem("role"); // Remove role from storage
+    localStorage.removeItem("userId"); // Remove userId from storage
+    
     navigate("/login"); // Redirect to login page
   };
 

@@ -13,12 +13,12 @@ class Project(BaseModel):
     developers: List[str] = []
 
 class ProjectOut(Project):
-    projectId: str = Field(alias='_id')
+    project_id: str = Field(alias='_id')
     module_id: Optional[str] = None
     status_id: Optional[str] = None
 
-    @validator('projectId', pre=True, always=True)
-    def convert_projectId(cls, v):
+    @validator('project_id', pre=True, always=True)
+    def convert_project_id(cls, v):
         return str(v) if isinstance(v, ObjectId) else v
 
     @validator('module_id', pre=True, always=True)
