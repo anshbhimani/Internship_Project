@@ -22,7 +22,7 @@ async def assign_manager(developer_id: str, manager_id: str):
 
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Failed to assign manager")
-
+    
     return {"message": f"Manager {manager_id} successfully assigned to Developer {developer_id}"}
 
 # Function to deassign manager from developer
