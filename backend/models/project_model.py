@@ -5,6 +5,7 @@ from bson import ObjectId
 class Project(BaseModel):
     title: str
     description: str
+    project_id:str
     technology: str
     estimatedHours: int
     startDate: str

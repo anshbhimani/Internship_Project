@@ -100,7 +100,7 @@ async def get_tasks_for_developer(developer_id: str, project_id: str):
             raise HTTPException(status_code=404, detail="No tasks found for this developer.")
 
         # Extract task_ids from user_tasks
-        task_ids = [str(user_task["taskid"]) for user_task in user_tasks]
+        task_ids = [str(user_task["taskId"]) for user_task in user_tasks]
 
         # Step 2: Query tasks collection to get tasks for the given task_ids
         tasks_cursor = tasks_collection.find({"_id": {"$in": [ObjectId(task_id) for task_id in task_ids]}})
