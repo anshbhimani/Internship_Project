@@ -18,17 +18,9 @@ function App() {
   const [userRole, setUserRole] = useState(localStorage.getItem("userRole")); // Get role from localStorage
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (userRole) {
-      localStorage.setItem("userRole", userRole); // Save role when it changes
-    }
-  }, [userRole]);
-
   const handleLogout = () => {
     setUserRole(null); // Clear role
-    localStorage.removeItem("role"); // Remove role from storage
-    localStorage.removeItem("userId"); // Remove userId from storage
-    
+
     navigate("/login"); // Redirect to login page
   };
 
