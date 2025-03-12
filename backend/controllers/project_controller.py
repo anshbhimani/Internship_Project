@@ -37,7 +37,6 @@ async def get_project(project_id: str):
         raise HTTPException(status_code=404, detail="Project not found")
     
     project["_id"] = str(project["_id"])  # Convert `_id` to string
-    project["developers"] = [str(dev) for dev in project["developers"]]
     return project
 
 
@@ -51,8 +50,7 @@ async def delete_project(project_id: str):
 async def get_all_projects():
     projects = await project_collection.find().to_list(None)  # Fetch all projects
     for project in projects:
-        project["_id"] = str(project["_id"])  # Convert ObjectId to string
-        project["developers"] = [str(dev) for dev in project["developers"]]  # Convert developer ObjectIds to strings
+        project["_id"] = str(project["_id"])  # Convert ObjectId to string  # Convert developer ObjectIds to strings
     return projects
 
 async def assign_manager_to_project(project_id: str, manager_id: str):
@@ -103,7 +101,6 @@ async def get_developer_projects(developer_id: str):
     projects_out = []
     # Return the projects with their developer_ids as strings
     for project in projects:
-        project["developers"] = [str(dev_id) for dev_id in project["developers"]]
         project["project_id"] = str(project["_id"]) 
         
         tasks_cursor = tasks_collection.find({"project_id": project["_id"], "assignedTo": developer_id})
@@ -146,8 +143,6 @@ async def get_projects_by_manager(manager_id: str):
         for project in projects:
             project["_id"] = str(project["_id"])
             project["manager_email"] = str(project["manager_email"])
-            project["developers"] = [str(dev) for dev in project["developers"]]
-
         return projects
 
     except Exception as e:
