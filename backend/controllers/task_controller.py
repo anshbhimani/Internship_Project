@@ -1,5 +1,5 @@
 from models.task_model import Task, TaskOut
-from config.database import user_task_colection,tasks_collection,project_collection
+from config.database import user_task_colection,tasks_collection,project_collection,status_collection
 from fastapi import HTTPException
 from bson import ObjectId
 
@@ -124,3 +124,34 @@ async def get_tasks_for_developer(developer_id: str, project_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    
+async def get_task_status(task_id: str):
+    """Retrieve the status of a task"""
+    task = await tasks_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    status = await status_collection.find_one({"_id": ObjectId(task["status_id"])})
+    if not status:
+        raise HTTPException(status_code=404, detail="Status not found")
+
+    return {"status_id": str(status["_id"]), "status_name": status["statusName"]}
+
+async def update_task_status(task_id: str, status_id: str):
+    """Update the status of a task"""
+    task = await tasks_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    status = await status_collection.find_one({"_id": ObjectId(status_id)})
+    if not status:
+        raise HTTPException(status_code=404, detail="Status not found")
+
+    result = await tasks_collection.update_one(
+        {"_id": ObjectId(task_id)}, {"$set": {"status_id": ObjectId(status_id)}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to update task status")
+
+    return {"message": "Task status updated successfully", "task_id": task_id, "status_id": status_id}

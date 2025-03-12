@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from controllers.task_controller import create_task, get_project_tasks, update_task, delete_task,get_tasks_for_developer
+from controllers.task_controller import create_task, get_project_tasks, update_task, delete_task,get_tasks_for_developer,update_task_status,get_task_status
 from typing import List
 from models.task_model import Task
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
@@ -28,3 +28,13 @@ async def remove_task(task_id: str):
 async def get_tasks_for_developer_route(developer_id: str, project_id: str):
     """API to fetch tasks assigned to a specific developer for a project"""
     return await get_tasks_for_developer(developer_id, project_id)
+
+@router.get("/{task_id}/status")
+async def get_task_status_route(task_id: str):
+    """Get the status of a task"""
+    return await get_task_status(task_id)
+
+@router.put("/{task_id}/status/{status_id}")
+async def update_task_status_route(task_id: str, status_id: str):
+    """Update the status of a task"""
+    return await update_task_status(task_id, status_id)
