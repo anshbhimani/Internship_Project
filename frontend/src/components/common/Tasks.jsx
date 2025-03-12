@@ -95,64 +95,76 @@ export const TasksPage = () => {
 
   useEffect(() => {
     if (!selectedProject) return;
-
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        const url =
-          role === "manager"
-            ? `${API_BASE_URL}/tasks/${selectedProject._id}`
-            : `${API_BASE_URL}/tasks/developer/${userId}/${selectedProject._id}`;
+      const fetchTasks = async () => {
+        try {
+          setLoading(true);
+          const url =
+            role === "manager"
+              ? `${API_BASE_URL}/tasks/${selectedProject._id}`
+              : `${API_BASE_URL}/tasks/developer/${userId}/${selectedProject._id}`;
     
-        const res = await axios.get(url);
-        const taskList = res.data;
-        setTasks(taskList);
+          const res = await axios.get(url);
+          const taskList = res.data;
+          setTasks(taskList);
     
-        // Fetch task details (assigned users & modules)
-        const userAssignments = {};
-        const moduleMappings = {};
+          // Fetch task details (assigned users & modules)
+          const userAssignments = {};
+          const moduleMappings = {};
+          const moduleStatuses = {};
     
-        await Promise.all(
-          taskList.map(async (task) => {
-            try {
-              const userRes = await axios.get(
-                `${API_BASE_URL}/user-tasks/task/${task._id}`
-              );
-              userAssignments[task._id] = userRes.data.map((user) => ({
-                _id: user.user_id, // Ensure this exists
-                full_name: user.full_name, // Ensure this exists
-              })); // Store full user objects
-            } catch (error) {
-              console.error(`Error fetching users for task ${task._id}:`, error);
-            }
-    
-            if (task.module_id) {
+          await Promise.all(
+            taskList.map(async (task) => {
               try {
-                const moduleRes = await axios.get(
-                  `${API_BASE_URL}/modules/modules/${task.module_id}`
+                // Fetch users assigned to the task
+                const userRes = await axios.get(
+                  `${API_BASE_URL}/user-tasks/task/${task._id}`
                 );
-                moduleMappings[task._id] = moduleRes.data;
+                userAssignments[task._id] = userRes.data.map((user) => ({
+                  _id: user.user_id, // Ensure this exists
+                  full_name: user.full_name, // Ensure this exists
+                }));
               } catch (error) {
-                console.error(`Error fetching module for task ${task._id}:`, error);
-                moduleMappings[task._id] = "Unknown Module";
+                console.error(`Error fetching users for task ${task._id}:`, error);
               }
-            }
-          })
-        );
     
-        setUserTaskAssignments(userAssignments);
-        setTaskModules(moduleMappings);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+              if (task.module_id) {
+                try {
+                  // Fetch module details
+                  const moduleRes = await axios.get(
+                    `${API_BASE_URL}/modules/${task.module_id}`
+                  );
+                  moduleMappings[task._id] = moduleRes.data;
     
-
-    fetchTasks();
-  }, [selectedProject, role, userId]);
-
+                  // Fetch module status separately
+                  const statusRes = await axios.get(
+                    `${API_BASE_URL}/modules/module_status/${task.module_id}`
+                  );
+                  moduleStatuses[task._id] = statusRes.data; // Store module status
+                } catch (error) {
+                  console.error(`Error fetching module for task ${task._id}:`, error);
+                  moduleMappings[task._id] = "Unknown Module";
+                  moduleStatuses[task._id] = "Unknown Status"; // Handle errors
+                }
+              }
+            })
+          );
+    
+          setUserTaskAssignments(userAssignments);
+          setTaskModules(moduleMappings);
+          setTaskModules((prev) => ({
+            ...prev,
+            statuses: moduleStatuses, // Store module statuses
+          }));
+        } catch (error) {
+          console.error("Error fetching tasks:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      fetchTasks();
+    }, [selectedProject, role, userId]);
+    
   return (
     <Grid2 container spacing={3} sx={{ p: 3 }}>
       {loading ? (
@@ -302,7 +314,7 @@ export const TasksPage = () => {
                             Module Details
                           </Typography>
                         </AccordionSummary>
-                        <AccordionDetails>
+                        <AccordionDetails>                          
                           {taskModules[task._id] ? (
                             <>
                               <Typography variant="body2">
@@ -315,7 +327,7 @@ export const TasksPage = () => {
                                 <strong>Estimated Hours:</strong> {taskModules[task._id].estimatedHours}
                               </Typography>
                               <Typography variant="body2">
-                                <strong>Status:</strong> {taskModules[task._id].status}
+                              <strong>Status:</strong> {taskModules.statuses?.[task._id]}
                               </Typography>
                               <Typography variant="body2">
                                 <strong>Start Date:</strong> {taskModules[task._id].startDate}
@@ -324,26 +336,6 @@ export const TasksPage = () => {
                           ) : (
                             <Typography variant="body2">No module assigned</Typography>
                           )}
-                        </AccordionDetails>
-                      </Accordion>
-                      {/* More Details */}
-                      <Accordion sx={{ backgroundColor: "#e3f2fd" }}>
-                        {/* <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: "bold", color: "#1565c0" }}
-                          >
-                            More Details
-                          </Typography>
-                        </AccordionSummary> */}
-                        <AccordionDetails>
-                          <Typography variant="body2">
-                            <strong>Deadline:</strong>{" "}
-                            {task.deadline || "Not set"}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Status:</strong> {task.status || "Pending"}
-                          </Typography>
                         </AccordionDetails>
                       </Accordion>
                     </Card>

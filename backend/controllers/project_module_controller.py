@@ -52,3 +52,16 @@ async def get_project_modules_and_statuses(project_id: str):
     statuses_out = [StatusOut(**status) for status in statuses]
     
     return modules_out, statuses_out
+
+async def get_module_status(module_id: str):
+    project_module = await project_modules_collection.find_one({"_id": ObjectId(module_id)})
+    
+    if not project_module:
+        raise HTTPException(status_code=404, detail="Module not found")
+
+    status_cursor = await status_collection.find_one({"_id": ObjectId(project_module["status"])})
+    
+    if not status_cursor:
+        raise HTTPException(status_code=404, detail="Status not found")
+
+    return status_cursor["statusName"]

@@ -50,8 +50,10 @@ export const Projects = () => {
 
   const fetchProjectModules = async (projectId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/modules/modules/${projectId}/modules-statuses/`);
+      const response = await axios.get(`${API_BASE_URL}/modules/${projectId}/modules-statuses/`);
       const { modules, statuses } = response.data;
+      console.log("Module and status" + response.data);
+      
   
       // Map statuses by ID
       const statusLookup = {};
@@ -127,27 +129,26 @@ export const Projects = () => {
 
                 
                 {/* Modules with Expandable Details */}
-                {/* Modules with Expandable Details */}
-<Typography variant="body2" sx={{ mt: 2 }}>
-  <strong>Modules:</strong>
-</Typography>
-{modulesMap[project._id]?.length > 0 ? (
-  modulesMap[project._id].map((module) => (
-    <Accordion key={module._id} sx={{ mt: 1 }}>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography>{module.moduleName}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Typography variant="body2"><strong>Description:</strong> {module.description}</Typography>
-        <Typography variant="body2"><strong>Estimated Hours:</strong> {module.estimatedHours}</Typography>
-        <Typography variant="body2"><strong>Start Date:</strong> {module.startDate}</Typography>
-        <Typography variant="body2"><strong>Status:</strong> {statusesMap[module.status] || "Unknown"}</Typography>
-      </AccordionDetails>
-    </Accordion>
-  ))
-) : (
-  <Typography variant="body2">No modules available.</Typography>
-)}
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <strong>Modules:</strong>
+              </Typography>
+              {modulesMap[project._id]?.length > 0 ? (
+                modulesMap[project._id].map((module) => (
+                  <Accordion key={module._id} sx={{ mt: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>{module.moduleName}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography variant="body2"><strong>Description:</strong> {module.description}</Typography>
+                      <Typography variant="body2"><strong>Estimated Hours:</strong> {module.estimatedHours}</Typography>
+                      <Typography variant="body2"><strong>Start Date:</strong> {module.startDate}</Typography>
+                      <Typography variant="body2"><strong>Status:</strong> {statusesMap[module.status] || "Unknown"}</Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+              ) : (
+                <Typography variant="body2">No modules available.</Typography>
+              )}
 
               </CardContent>
             </Card>
