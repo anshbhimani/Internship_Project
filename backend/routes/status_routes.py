@@ -12,18 +12,18 @@ router = APIRouter(prefix="/status", tags=["Status"])
 async def createStatus(status: Status):
     return await create_status(status)
 
-@router.get("/statuss/{status_id}", response_model=StatusOut)
+@router.get("/status/{status_id}", response_model=StatusOut)
 async def getStatus(status_id: str):
     return await get_status(status_id)
 
-@router.get("/statuss", response_model=List[StatusOut])
+@router.get("/status", response_model=List[StatusOut])
 async def getAllStatus():
     return await get_all_status()
 
-@router.put("/statuss/{status_id}", response_model=StatusOut)
+@router.put("/status/{status_id}", response_model=StatusOut)
 async def updateStatus(status_id: str, updated_status: Status):
     return await update_status(status_id,updated_status)
 
-@router.delete("/statuss/{status_id}")
+@router.delete("/status/{status_id}")
 async def deleteStatus(status_id: str):
     return await delete_status(status_id)

@@ -7,18 +7,20 @@ import {
   CardContent,
   CardHeader,
   Typography,
-  Grid2,
+  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   Select,
+  IconButton,
+  Menu,
   MenuItem,
   FormControl,
-  Button,
   CircularProgress,
   Chip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import EditIcon from "@mui/icons-material/Edit";
 
 export const TasksPage = () => {
   const [projects, setProjects] = useState([]);
@@ -28,6 +30,9 @@ export const TasksPage = () => {
   const [loading, setLoading] = useState(true);
   const [userTaskAssignments, setUserTaskAssignments] = useState({});
   const [taskModules, setTaskModules] = useState({});
+  const [anchorEl, setAnchorEl] = useState(null); // For dropdown menu
+  const [selectedTask, setSelectedTask] = useState(null); // Track selected task for status change
+  const [statuses, setStatuses] = useState([]);
   const userId = Cookies.get("userId");
   const priorityColors = {
     5: "#e63d37", // High priority (red)
@@ -71,6 +76,7 @@ export const TasksPage = () => {
     }
   };
 
+  // Fetch projects
   useEffect(() => {
     const userRole = Cookies.get("role");
     setRole(userRole);
@@ -94,6 +100,20 @@ export const TasksPage = () => {
   }, [userId]);
 
   useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/status/status`);
+        setStatuses(response.data);
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+      }
+    };
+  
+    fetchStatuses();
+  }, []);
+
+  // Fetch tasks based on selected project
+  useEffect(() => {
     if (!selectedProject) return;
       const fetchTasks = async () => {
         try {
@@ -110,7 +130,7 @@ export const TasksPage = () => {
           // Fetch task details (assigned users & modules)
           const userAssignments = {};
           const moduleMappings = {};
-          const moduleStatuses = {};
+          const statusMappings = {};
     
           await Promise.all(
             taskList.map(async (task) => {
@@ -133,17 +153,23 @@ export const TasksPage = () => {
                   const moduleRes = await axios.get(
                     `${API_BASE_URL}/modules/${task.module_id}`
                   );
-                  moduleMappings[task._id] = moduleRes.data;
-    
-                  // Fetch module status separately
-                  const statusRes = await axios.get(
-                    `${API_BASE_URL}/modules/module_status/${task.module_id}`
-                  );
-                  moduleStatuses[task._id] = statusRes.data; // Store module status
+                  moduleMappings[task._id] = moduleRes.data; 
                 } catch (error) {
                   console.error(`Error fetching module for task ${task._id}:`, error);
                   moduleMappings[task._id] = "Unknown Module";
-                  moduleStatuses[task._id] = "Unknown Status"; // Handle errors
+                }
+              }
+
+              if (task.status_id) {
+                try {
+                  // Fetch status name
+                  const statusRes = await axios.get(
+                    `${API_BASE_URL}/status/status/${task.status_id}`
+                  );
+                  statusMappings[task._id] = statusRes.data.status;
+                } catch (error) {
+                  console.error(`Error fetching status for task ${task._id}:`, error);
+                  statusMappings[task._id] = "Unknown Status";
                 }
               }
             })
@@ -151,10 +177,12 @@ export const TasksPage = () => {
     
           setUserTaskAssignments(userAssignments);
           setTaskModules(moduleMappings);
-          setTaskModules((prev) => ({
-            ...prev,
-            statuses: moduleStatuses, // Store module statuses
-          }));
+          setTasks((prevTasks) =>
+            prevTasks.map((task) => ({
+              ...task,
+              statusName: statusMappings[task._id] || "Unknown Status",
+            }))
+          );
         } catch (error) {
           console.error("Error fetching tasks:", error);
         } finally {
@@ -164,17 +192,50 @@ export const TasksPage = () => {
     
       fetchTasks();
     }, [selectedProject, role, userId]);
-    
+  
+    // Handle status update
+  const handleStatusUpdate = async (taskId, statusId) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/tasks/${taskId}/status/${statusId}`
+      );
+      if (response.status === 200) {
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId
+              ? { ...task, statusName: response.data.status_name }
+              : task
+          )
+        );
+        setAnchorEl(null); // Close the menu after updating status
+        alert("Status updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Failed to update status.");
+    }
+  };
+
+  const handleClick = (event, task) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedTask(task); // Set the selected task for status change
+  };
+
+  // Handle menu closing
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
-    <Grid2 container spacing={3} sx={{ p: 3 }}>
+    <Grid container spacing={3} sx={{ p: 3 }}>
       {loading ? (
-        <Grid2 item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+        <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
           <CircularProgress />
-        </Grid2>
+        </Grid>
       ) : (
         <>
           {/* Project Selection Dropdown */}
-          <Grid2 item xs={12} sx={{ mb: 2 }}>
+          <Grid item xs={12} sx={{ mb: 2 }}>
             <FormControl
               fullWidth
               sx={{
@@ -224,12 +285,12 @@ export const TasksPage = () => {
                 ))}
               </Select>
             </FormControl>
-          </Grid2>
+          </Grid>
 
           {/* Task List */}
           {selectedProject && (
-            <Grid2 item xs={12}>
-              <Grid2 container spacing={3}>
+            <Grid item xs={12}>
+              <Grid container spacing={3}>
                 {tasks.length > 0 ? (
                   tasks.map((task) => (
                     <Card
@@ -303,6 +364,28 @@ export const TasksPage = () => {
                           <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
                           minutes
                         </Typography>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          <strong>Task Status:</strong> {task.statusName || "Loading..."}
+                          <IconButton onClick={(e) => handleClick(e, task)}>
+                            <EditIcon />
+                          </IconButton>
+                          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                            {statuses.length > 0 ? (
+                              statuses.map((status) => (
+                                <MenuItem
+                                  key={status._id}
+                                  onClick={() => handleStatusUpdate(selectedTask._id, status._id)}
+                                >
+                                  {status.status}
+                                </MenuItem>
+                              ))
+                            ) : (
+                              <MenuItem disabled>Loading...</MenuItem>
+                            )}
+                          </Menu>
+
+
+                        </Typography>
                       </CardContent>
                       {/* Module Details */}
                       <Accordion sx={{ backgroundColor: "#f5f5f5" }}>
@@ -327,9 +410,6 @@ export const TasksPage = () => {
                                 <strong>Estimated Hours:</strong> {taskModules[task._id].estimatedHours}
                               </Typography>
                               <Typography variant="body2">
-                              <strong>Status:</strong> {taskModules.statuses?.[task._id]}
-                              </Typography>
-                              <Typography variant="body2">
                                 <strong>Start Date:</strong> {taskModules[task._id].startDate}
                               </Typography>
                             </>
@@ -345,11 +425,11 @@ export const TasksPage = () => {
                     No tasks available for this project.
                   </Typography>
                 )}
-              </Grid2>
-            </Grid2>
+              </Grid>
+            </Grid>
           )}
         </>
       )}
-    </Grid2>
+    </Grid>
   );
 };

@@ -1,13 +1,17 @@
 from pydantic import BaseModel, Field, validator
 from bson import ObjectId
+from typing import Optional
 
 class Status(BaseModel):
-    statusName: str
+    status: str = Field(alias='status')
 
-class StatusOut(Status):
-    id: str = Field(alias='_id')
-    statusName: str
-
-    @validator('id', pre=True, always=True)
-    def convert_id(cls, v):
-        return str(v) if isinstance(v, ObjectId) else v
+class StatusOut(BaseModel):
+    _id: str
+    status: str
+    
+    @classmethod
+    def from_mongo(cls, data: dict):
+        # Ensure _id exists before converting
+        if '_id' in data and isinstance(data['_id'], ObjectId):
+            data['_id'] = str(data['_id'])  # Convert ObjectId to string
+        return cls(**data)
