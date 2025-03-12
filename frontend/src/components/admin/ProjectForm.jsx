@@ -21,11 +21,7 @@ export const ProjectForm = () => {
     };
     fetchManagers();
   }, []);
-
-  const watchStartDate = watch("startDate");
-  const watchCompletionDate = watch("completionDate");
-  const watchEstimatedHours = watch("estimatedHours");
-
+  
   const onSubmit = async (data) => {
     const startDate = new Date(data.startDate);
     const completionDate = new Date(data.completionDate);

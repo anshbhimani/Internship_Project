@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from controllers.admin_controller import assign_manager, deassign_manager,get_all_managers,get_all_developers,assign_developers
+from controllers.admin_controller import get_all_developers,get_all_managers,assign_manager_to_project,deassign_manager_from_project,assign_developers_to_project,deassign_developers_from_project
 from pydantic import BaseModel
 from typing import List
 
@@ -7,15 +7,15 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 class AssignDevelopersRequest(BaseModel):
     developers: List[str]
 
-# Route to assign manager to a developer
-@router.put("/assign-manager/{developer_id}")
-async def assign_manager_route(developer_id: str, manager_id: str):
-    return await assign_manager(developer_id, manager_id)
+# Route to assign manager to a project
+@router.put("/assign-manager/{project_id}")
+async def assign_manager_to_project_route(manager_id: str, project_id: str):
+    return await assign_manager_to_project(project_id,manager_id)
 
-# Route to deassign manager from a developer
-@router.put("/deassign-manager/{developer_id}")
-async def deassign_manager_route(developer_id: str):
-    return await deassign_manager(developer_id)
+# Route to deassign manager from a project
+@router.put("/deassign-manager/{project_id}")
+async def deassign_manager_to_project_route(manager_id: str, project_id: str):
+    return await deassign_manager_from_project(project_id,manager_id)
 
 # Route to get all managers
 @router.get("/managers")
@@ -28,5 +28,9 @@ async def get_developers_route():
     return await get_all_developers()
 
 @router.put("/projects/{project_id}/assign-developers/{manager_id}")
-async def assign_developers_to_project(project_id: str, request: AssignDevelopersRequest):
-    return await assign_developers(project_id, request.developers)
+async def assign_developers_to_project_route(project_id: str, request: AssignDevelopersRequest):
+    return await assign_developers_to_project(project_id, request.developers)
+
+@router.put("/projects/{project_id}/deassign-developers/{manager_id}")
+async def deassign_developers_from_project_route(project_id: str, request: AssignDevelopersRequest):
+    return await deassign_developers_from_project(project_id, request.developers)
