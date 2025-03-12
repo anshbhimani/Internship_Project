@@ -1,5 +1,5 @@
 from models.project_team_model import ProjectTeam
-from config.database import project_team_collection,project_collection,user_collection
+from config.database import db
 from fastapi import HTTPException
 from bson import ObjectId
 from typing import List
@@ -14,21 +14,21 @@ async def create_project_team(projectTeam: ProjectTeam):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    project = await project_collection.find_one({"_id": projectTeam_data["projectId"]})
+    project = await db["projects"].find_one({"_id": projectTeam_data["projectId"]})
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
     # Validate developers
     developers_info = []
     for user_id in projectTeam_data["developers"]:
-        user = await user_collection.find_one({"_id": user_id})
+        user = await db["developers"].find_one({"_id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
 
     # Insert into project_team collection
     projectTeam_data["developers"] = developers_info
-    result = await project_team_collection.insert_one(projectTeam_data)
+    result = await db["project_team"].insert_one(projectTeam_data)
     return {"message": "Project team created successfully", "id": str(result.inserted_id)}
 
 async def get_project_team(project_id: str):
@@ -37,31 +37,14 @@ async def get_project_team(project_id: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    team = await project_team_collection.find_one({"projectId": project_id})
+    team = await db["project_team"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
-    
-    # Ensure developers contain both ID and name
-    developers_info = []
-    for user_id in team.get("developers", []):
-        user = await user_collection.find_one({"_id": ObjectId(user_id)})
-        if user:
-            developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
-            
-    manager_info = []
-    manager_id = team.get("manager_id")
-
-    if manager_id:  # Check if a manager exists
-        user = await user_collection.find_one({"_id": ObjectId(manager_id)})
-        if user:
-            manager_info.append({"id": str(user["_id"]), "name": user["firstname"]})
-    
+ 
     return {
         "projectId": str(team["projectId"]),
-        "developers": developers_info,
-        "manager":manager_info
+        "developers": team["developers"]
     }
-    
 async def update_project_team(project_id: str, add_developers: List[str] = [], remove_developers: List[str] = []):
     try:
         project_id = ObjectId(project_id)
@@ -71,13 +54,13 @@ async def update_project_team(project_id: str, add_developers: List[str] = [], r
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
     # Fetch the existing team
-    team = await project_team_collection.find_one({"projectId": project_id})
+    team = await db["project_team"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
 
     new_developers_info = []
     for user_id in add_developers:
-        user = await user_collection.find_one({"_id": user_id})
+        user = await db["developers"].find_one({"_id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         new_developers_info.append({"id": str(user["_id"]), "name": user["firstname"]})
@@ -87,7 +70,7 @@ async def update_project_team(project_id: str, add_developers: List[str] = [], r
     updated_developers = list(current_developers.union(add_developers_ids) - set(remove_developers))
 
     # Update the team with the new user list
-    await project_team_collection.update_one(
+    await db["project_team"].update_one(
         {"projectId": project_id},
         {"$set": {"developers": list(new_developers_info)}}  # Store both ID and name in developers
     )
@@ -100,9 +83,32 @@ async def delete_project_team(project_id: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    result = await project_team_collection.delete_one({"projectId": project_id})
+    result = await db["project_team"].delete_one({"projectId": project_id})
 
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project team not found")
 
     return {"message": "Project team deleted successfully"}
+
+async def get_team_project(team_id: str):
+    try:
+        team_id = ObjectId(team_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ObjectId format")
+    
+    # Find the project assigned to the team
+    project_team = await db["project_teams"].find_one({"_id": ObjectId(team_id)})
+    if not project_team:
+        raise HTTPException(status_code=404, detail="Team not found or no project assigned")
+    
+    project = await db["projects"].find_one({"_id": project_team["projectId"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return {
+        "projectId": str(project["_id"]),
+        "projectName": project.get("name", "Unknown Project"),
+        "description": project.get("description", "No description available"),
+        # "managerId": str(project_team["managerId"]),
+        "developers": project_team.get("developers", [])
+    }

@@ -69,45 +69,40 @@ const AssignProjectToDevelopers = () => {
       alert("Please select a project.");
       return;
     }
-
-    const developerIds = selectedDevelopers.map((dev) => dev.value);
-
+  
     try {
-      await axios.put(
-        `${API_BASE_URL}/admin/projects/${selectedProject.value}/assign-developers/${managerId}`,
-        { developers: developerIds },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
+      for (const dev of selectedDevelopers) {
+        await axios.put(
+          `${API_BASE_URL}/admin/projects/${selectedProject.value}/assign-developers/${dev.value}`
+        );
+      }
+  
       alert("Developers assigned successfully!");
       setSelectedDevelopers([]);
-      fetchAssignedDevelopers(selectedProject.value); // Re-fetch assigned developers
+      fetchAssignedDevelopers(selectedProject.value);
     } catch (error) {
-      console.error(
-        "Error assigning developers:",
-        error.response ? error.response.data : error.message
-      );
+      console.error("Error assigning developers:", error);
       alert("Error assigning developers.");
     }
   };
+  
 
   const handleRemoveDeveloper = async (developerId) => {
     if (!selectedProject) return;
-
+  
     try {
       await axios.delete(
-        `${API_BASE_URL}/projects/${selectedProject.value}/remove-developer/${developerId}`
+        `${API_BASE_URL}/admin/projects/${selectedProject.value}/deassign-developers/${developerId}`
       );
-
+  
       alert("Developer removed successfully!");
-      fetchAssignedDevelopers(selectedProject.value); // Re-fetch assigned developers
+      fetchAssignedDevelopers(selectedProject.value);
     } catch (error) {
       console.error("Error removing developer:", error);
       alert("Failed to remove developer.");
     }
   };
+  
 
   // Filter out already assigned developers from the dropdown
   const availableDevelopers = (developers || []).filter(

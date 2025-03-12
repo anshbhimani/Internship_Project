@@ -5,6 +5,7 @@ from controllers.manager_controller import (
     get_project_team,
     update_project_team,
     delete_project_team,
+    get_team_project
 )
 from typing import List
 
@@ -29,3 +30,7 @@ async def update_team(project_id: str, add_users: List[str] = [], remove_users: 
 @router.delete("/{project_id}")
 async def delete_team(project_id: str):
     return await delete_project_team(project_id)
+
+@router.get("/team/{team_id}/project", response_model=dict)
+async def get_team_project_route(team_id: str):
+    return await get_team_project(team_id)

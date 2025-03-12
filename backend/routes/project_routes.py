@@ -1,6 +1,6 @@
 # routes/project_routes.py
 from fastapi import APIRouter,Body
-from controllers.project_controller import create_project, get_all_projects,get_project,assign_manager_to_project,get_projects_by_manager,get_developers_by_manager,get_assigned_developers,remove_developer,get_developer_projects
+from controllers.project_controller import create_project, get_all_projects,get_project,assign_manager_to_project,get_projects_by_manager,get_developers_by_manager,get_assigned_developers,get_developer_projects
 from models.project_model import Project
 from typing import List
 
@@ -22,24 +22,15 @@ async def get_project_route(project_id: str):
 async def get_projects_by_manager_route(manager_id: str):
     return await get_projects_by_manager(manager_id)
 
-@router.put("/projects/{project_id}/assign-manager/{manager_id}")
-async def assign_manager(project_id: str, manager_id: str,developers: List[str] = Body(...)):
-    return await assign_manager_to_project(project_id, manager_id)
-
 @router.get("/managers/{manager_id}/developers", response_model=List[dict])
 async def get_developers_by_managers_route(manager_id: str):
     return await get_developers_by_manager(manager_id)
-
 
 @router.get("/projects/{project_id}/developers")
 async def get_project_developers(project_id: str):
     return await get_assigned_developers(project_id)
 
-@router.delete("/projects/{project_id}/remove-developer/{developer_id}")
-async def remove_developer_from_project(project_id: str, developer_id: str):
-    return await remove_developer(project_id, developer_id)
-
-@router.get("/developer/{developer_id}", response_model=List[Project])
+@router.get("/developer/{developer_id}", response_model=List)
 async def fetch_projects_for_developer(developer_id: str):
     """API to fetch projects assigned to a developer"""
     return await get_developer_projects(developer_id)

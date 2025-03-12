@@ -131,7 +131,7 @@ export const TasksPage = () => {
                 const moduleRes = await axios.get(
                   `${API_BASE_URL}/modules/modules/${task.module_id}`
                 );
-                moduleMappings[task._id] = moduleRes.data.moduleName;
+                moduleMappings[task._id] = moduleRes.data;
               } catch (error) {
                 console.error(`Error fetching module for task ${task._id}:`, error);
                 moduleMappings[task._id] = "Unknown Module";
@@ -271,14 +271,14 @@ export const TasksPage = () => {
                               ? userTaskAssignments[task._id].map((user) => (
                                   <Chip
                                     key={user._id}
-                                    label={user.full_name} // Now full_name exists
-                                    onDelete={() => handleDeassign(task._id, user._id)}
+                                    label={user.full_name}
+                                    onDelete={role === "manager" ? () => handleDeassign(task._id, user._id) : undefined} 
                                     sx={{
                                       m: 0.5,
                                       backgroundColor: "#ff9800",
                                       color: "white",
                                       "& .MuiChip-deleteIcon": {
-                                        color: "#d32f2f",
+                                        color: role === "manager" ? "#d32f2f" : "transparent", // Hide delete icon for developers
                                       },
                                     }}
                                   />
@@ -286,6 +286,7 @@ export const TasksPage = () => {
                               : "Not assigned"}
                           </span>
                         </Typography>
+
                         <Typography variant="body2" sx={{ mt: 1 }}>
                           <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
                           minutes
@@ -302,26 +303,39 @@ export const TasksPage = () => {
                           </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                          <Chip
-                            label={taskModules[task._id] || "Loading..."}
-                            sx={{
-                              backgroundColor: "#4caf50",
-                              color: "white",
-                              fontWeight: "bold",
-                            }}
-                          />
+                          {taskModules[task._id] ? (
+                            <>
+                              <Typography variant="body2">
+                                <strong>Module Name:</strong> {taskModules[task._id].moduleName}
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>Description:</strong> {taskModules[task._id].description}
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>Estimated Hours:</strong> {taskModules[task._id].estimatedHours}
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>Status:</strong> {taskModules[task._id].status}
+                              </Typography>
+                              <Typography variant="body2">
+                                <strong>Start Date:</strong> {taskModules[task._id].startDate}
+                              </Typography>
+                            </>
+                          ) : (
+                            <Typography variant="body2">No module assigned</Typography>
+                          )}
                         </AccordionDetails>
                       </Accordion>
                       {/* More Details */}
                       <Accordion sx={{ backgroundColor: "#e3f2fd" }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        {/* <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                           <Typography
                             variant="body2"
                             sx={{ fontWeight: "bold", color: "#1565c0" }}
                           >
                             More Details
                           </Typography>
-                        </AccordionSummary>
+                        </AccordionSummary> */}
                         <AccordionDetails>
                           <Typography variant="body2">
                             <strong>Deadline:</strong>{" "}

@@ -5,13 +5,10 @@ from bson import ObjectId
 class Project(BaseModel):
     title: str
     description: str
-    project_id:str
     technology: str
     estimatedHours: int
     startDate: str
     completionDate: str
-    manager_email: str  
-    developers: List[str] = []
 
 class ProjectOut(Project):
     project_id: str = Field(alias='_id')

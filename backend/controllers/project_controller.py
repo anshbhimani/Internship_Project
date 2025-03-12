@@ -1,13 +1,11 @@
 from models.project_model import Project,ProjectOut
-from config.database import project_collection,user_collection,tasks_collection
+from config.database import project_collection,user_collection,tasks_collection,project_team_collection
 from fastapi import HTTPException
 from bson import ObjectId
 
 async def create_project(project: Project):
     # Admin creates a project without assigning developers
     project_data = project.dict()
-    project_data["developers"] = []  # Empty list since developers are assigned later
-
     # If you need to process the manager_email, add logic here, e.g., check if manager_email exists in the user database
     manager = await user_collection.find_one({"email": project_data["manager_email"], "role": "manager"})
     if not manager:
@@ -37,6 +35,7 @@ async def get_project(project_id: str):
         raise HTTPException(status_code=404, detail="Project not found")
     
     project["_id"] = str(project["_id"])  # Convert `_id` to string
+    project["developers"] = [str(dev) for dev in project["developers"]]
     return project
 
 
@@ -91,33 +90,36 @@ async def get_developer_projects(developer_id: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    # Find projects where the developer is part of the developer_ids list
-    projects_cursor = project_collection.find({"developers": developer_id})
+    # Step 1: Fetch project team documents where the developer is part of the developers list
+    teams_cursor = project_team_collection.find({"developers": developer_id})
+    teams = await teams_cursor.to_list(length=None)
+
+    if not teams:
+        raise HTTPException(status_code=404, detail="No projects found for the developer")
+
+    # Step 2: Extract project IDs
+    project_ids = [team["projectId"] for team in teams]
+
+    # Step 3: Fetch projects from project_collection using these project IDs
+    projects_cursor = project_collection.find({"_id": {"$in": project_ids}}, {
+        "_id": 1,
+        "title": 1,
+        "description": 1,
+        "technology": 1,
+        "estimatedHours": 1,
+        "startDate": 1,
+        "completionDate": 1
+    })
     projects = await projects_cursor.to_list(length=None)
 
     if not projects:
-        raise HTTPException(status_code=404, detail="No projects found for the developer")
-    
-    projects_out = []
-    # Return the projects with their developer_ids as strings
-    for project in projects:
-        project["project_id"] = str(project["_id"]) 
-        
-        tasks_cursor = tasks_collection.find({"project_id": project["_id"], "assignedTo": developer_id})
-        tasks = await tasks_cursor.to_list(length=None)
-        
-        for task in tasks:
-            task["_id"] = str(task["_id"])
-            task["project_id"] = str(task["project_id"])
-            task["module_id"] = str(task["module_id"])
-            task["status_id"] = str(task["status_id"])
+        raise HTTPException(status_code=404, detail="No Projects found for this developer")
 
-        project["tasks"] = tasks 
-        project["module_id"] = project.get("module_id", None)
-        project["status_id"] = project.get("status_id", None)
-        project_out = ProjectOut(**project)  # Using ProjectOut to validate and serialize
-        projects_out.append(project_out.dict()) 
+    for project in projects:
+        project["_id"] = str(project["_id"])
+        
     return projects
+
 
 async def get_projects_by_manager(manager_id: str):
     try:
@@ -178,7 +180,7 @@ async def get_assigned_developers(project_id: str):
             raise HTTPException(status_code=400, detail="Invalid project ID format")
 
         # Fetch project from database
-        project = await project_collection.find_one({"_id": ObjectId(project_id)}, {"developers": 1})
+        project = await project_team_collection.find_one({"projectId": ObjectId(project_id)}, {"developers": 1})
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
 
@@ -186,6 +188,7 @@ async def get_assigned_developers(project_id: str):
         if not developer_ids:
             return []  # Return an empty list if no developers are assigned
 
+        developer_ids = [ObjectId(dev_id) for dev_id in developer_ids]
         # Fetch developers from the database
         developers = await user_collection.find(
             {"_id": {"$in": developer_ids}, "role": "developer"},
@@ -199,19 +202,3 @@ async def get_assigned_developers(project_id: str):
         return developers
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-    
-async def remove_developer(project_id: str, developer_id: str):
-    project = await project_collection.find_one({"_id": ObjectId(project_id)})
-    
-    if not project:
-        return {"error": "Project not found"}
-
-    developer_object_id = ObjectId(developer_id)
-    updated_developers = [dev for dev in project.get("developers", []) if dev != developer_object_id]
-
-    await project_collection.update_one(
-        {"_id": ObjectId(project_id)}, 
-        {"$set": {"developers": updated_developers}}
-    )
-
-    return {"message": "Developer removed successfully"}

@@ -88,7 +88,7 @@ async def get_all_developers():
 
     return developers
 
-async def assign_developers_to_project(project_id: str ,developers: List[str]):
+async def assign_developers_to_project(project_id: str, developer_id: str):
     if not ObjectId.is_valid(project_id):
         raise HTTPException(status_code=400, detail="Invalid ID format")
     
@@ -97,60 +97,85 @@ async def assign_developers_to_project(project_id: str ,developers: List[str]):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    # Convert developer IDs to ObjectId
-    developer_ids = [ObjectId(dev) for dev in developers if ObjectId.is_valid(dev)]
+    developer = await user_collection.find_one({"_id": ObjectId(developer_id), "role": "developer"})
+    if not developer:
+        raise HTTPException(status_code=400, detail="Developer not found or not a valid developer role")
 
-    # Fetch developers and validate their role
-    assigned_developers = await user_collection.find({"_id": {"$in": developer_ids}, "role": "developer"}).to_list(None)
-
-    if len(assigned_developers) != len(developer_ids):
-        raise HTTPException(status_code=400, detail="Some developers not found or not a developer role")
-
+    # Fetch existing project team entry
     project_team = await project_team_collection.find_one({"projectId": ObjectId(project_id)})
     existing_developers = project_team.get("developers", []) if project_team else []
     existing_developers = [ObjectId(dev) if isinstance(dev, str) else dev for dev in existing_developers]
-    updated_developers = list(set(existing_developers + developers))
+
+    # Combine existing and new developers correctly
+    if ObjectId(developer_id) in existing_developers:
+        raise HTTPException(status_code=400, detail="Developer already assigned to the project")
+
+    # Add the new developer
+    updated_developers = existing_developers + [ObjectId(developer_id)]
+    # Fetch manager ID from email
+    manager = await user_collection.find_one({"email": project.get('manager_email')})
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
     
+    manager_id = manager['_id']
+
+    # Update or create project team entry
     if project_team:
-        await project_team_collection.update_one(
+        result = await project_team_collection.update_one(
             {"projectId": ObjectId(project_id)},
-            {"$set": {"developers": updated_developers}}
+            {"$set": {"developers": updated_developers, "manager_id": manager_id}}
         )
+        if result.modified_count == 0:
+            print("No document was updated. Check if projectId exists in project_team_collection.")
     else:
-        await project_team_collection.insert_one({"projectId": ObjectId(project_id), "developers": developers})
+        insert_result = await project_team_collection.insert_one(
+            {"projectId": ObjectId(project_id), "developers": updated_developers, "manager_id": manager_id}
+        )
+        if not insert_result.inserted_id:
+            raise HTTPException(status_code=500, detail="Insertion failed.")
 
     return {"message": "Developers assigned successfully"}
 
 # Function to deassign developers from a project
-async def deassign_developers_from_project(project_id: str, developer_ids: Optional[List[str]] = None):
+async def deassign_developers_from_project(project_id: str, developer_id: str):
     if not ObjectId.is_valid(project_id):
-        raise HTTPException(status_code=400, detail="Invalid project ID format")
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+    
+    # Validate project existence
+    project = await project_collection.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
 
-    project_team = await project_team_collection.find_one({"projectId": project_id})
+    # Validate developer
+    developer = await user_collection.find_one({"_id": ObjectId(developer_id), "role": "developer"})
+    if not developer:
+        raise HTTPException(status_code=400, detail="Developer not found or not a valid developer role")
+
+    # Fetch existing project team entry
+    project_team = await project_team_collection.find_one({"projectId": ObjectId(project_id)})
+
     if not project_team:
         raise HTTPException(status_code=404, detail="Project team not found")
 
-    current_developers = project_team.get("developers", [])
+    existing_developers = project_team.get("developers", [])
 
-    if not current_developers:
-        raise HTTPException(status_code=400, detail="No developers assigned to this project")
+    # Ensure proper ObjectId conversion
+    existing_developers = [ObjectId(dev) if isinstance(dev, str) else dev for dev in existing_developers]
 
-    current_developers = [ObjectId(dev) if isinstance(dev, str) else dev for dev in current_developers]
-    if developer_ids:
-       # Remove only specified developers
-        developer_ids = [ObjectId(dev) for dev in developer_ids if ObjectId.is_valid(dev)]
-        updated_developers = [dev for dev in current_developers if dev not in developer_ids]
-    else:
-        # If no developer IDs provided, remove all developers
-        updated_developers = []
+     # Check if developer is in the list
+    if ObjectId(developer_id) not in existing_developers:
+        raise HTTPException(status_code=400, detail="Developer not assigned to this project")
 
-    # Update the project document
-    result = await project_collection.update_one(
-        {"_id": ObjectId(project_id)},
+    # Remove only selected developers
+    updated_developers = [dev for dev in existing_developers if dev != ObjectId(developer_id)]
+
+    # Update project team document
+    result = await project_team_collection.update_one(
+        {"projectId": ObjectId(project_id)},
         {"$set": {"developers": updated_developers}}
     )
 
     if result.modified_count == 0:
-        raise HTTPException(status_code=400, detail="Failed to update developers list")
+        raise HTTPException(status_code=400, detail="Failed to deassign developers")
 
-    return {"message": "Developers removed successfully"}
+    return {"message": "Developers deassigned successfully"}
