@@ -24,7 +24,6 @@ async def get_all_status():
     statuses = await status_collection.find().to_list(None)  # Fetch all statuses
     if not statuses:
         raise HTTPException(status_code=404, detail="No statuses found")
-    print(statuses)
     return [StatusOut.from_mongo(status) for status in statuses]
 
 async def delete_status(status_id: str):

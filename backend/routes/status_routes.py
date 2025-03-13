@@ -21,8 +21,8 @@ async def getAllStatus():
     return await get_all_status()
 
 @router.get("/{project_id}/modules-statuses", response_model=dict)
-async def get_modules_and_statuses_route():
-    return await get_modules_and_statuses()
+async def get_modules_and_statuses_route(project_id:str):
+    return await get_modules_and_statuses(project_id)
 
 @router.put("/status/{status_id}", response_model=StatusOut)
 async def updateStatus(status_id: str, updated_status: Status):

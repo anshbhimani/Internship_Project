@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from config.database import project_modules_collection
-from models.project_module_model import ProjectModule
+from models.project_module_model import ProjectModule,ProjectModuleOut
 from typing import List
 
 async def create_project_module(module: ProjectModule):
@@ -37,5 +37,6 @@ async def delete_project_module(module_id: str):
     return {"message": "Module deleted successfully"}
 
 async def get_modules_by_project(project_id: str) -> List[ProjectModule]:
-    modules = await ProjectModule.find({"project_id": project_id}).to_list()
-    return modules
+    modules = await project_modules_collection.find({"projectId": project_id}).to_list(None)
+    
+    return [ProjectModuleOut(**module) for module in modules]
