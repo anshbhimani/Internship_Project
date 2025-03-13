@@ -28,7 +28,7 @@ async def create_project_team(projectTeam: ProjectTeam):
 
     # Insert into project_team collection
     projectTeam_data["developers"] = developers_info
-    result = await db["project_team"].insert_one(projectTeam_data)
+    result = await db["project_teams"].insert_one(projectTeam_data)
     return {"message": "Project team created successfully", "id": str(result.inserted_id)}
 
 async def get_project_team(project_id: str):
@@ -37,7 +37,7 @@ async def get_project_team(project_id: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    team = await db["project_team"].find_one({"projectId": project_id})
+    team = await db["project_teams"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
  
@@ -54,7 +54,7 @@ async def update_project_team(project_id: str, add_developers: List[str] = [], r
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
     # Fetch the existing team
-    team = await db["project_team"].find_one({"projectId": project_id})
+    team = await db["project_teams"].find_one({"projectId": project_id})
     if not team:
         raise HTTPException(status_code=404, detail="Project team not found")
 
@@ -70,7 +70,7 @@ async def update_project_team(project_id: str, add_developers: List[str] = [], r
     updated_developers = list(current_developers.union(add_developers_ids) - set(remove_developers))
 
     # Update the team with the new user list
-    await db["project_team"].update_one(
+    await db["project_teams"].update_one(
         {"projectId": project_id},
         {"$set": {"developers": list(new_developers_info)}}  # Store both ID and name in developers
     )
@@ -83,7 +83,7 @@ async def delete_project_team(project_id: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    result = await db["project_team"].delete_one({"projectId": project_id})
+    result = await db["project_teams"].delete_one({"projectId": project_id})
 
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project team not found")
@@ -109,6 +109,6 @@ async def get_team_project(team_id: str):
         "projectId": str(project["_id"]),
         "projectName": project.get("name", "Unknown Project"),
         "description": project.get("description", "No description available"),
-        # "managerId": str(project_team["managerId"]),
+        # "managerId": str(project_teams["managerId"]),
         "developers": project_team.get("developers", [])
     }

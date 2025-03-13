@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
-from config.database import project_team_collection,user_collection,project_collection
-from typing import List,Optional
+from config.database import project_team_collection, user_collection, project_collection
+from controllers.email import send_manager_assignment_email, send_manager_removal_email,send_developer_assigned_email,send_developer_deassigned_email
 
 # Function to assign manager to project
 async def assign_manager_to_project(project_id: str, manager_id: str):
@@ -18,7 +18,7 @@ async def assign_manager_to_project(project_id: str, manager_id: str):
     # Update the project's manager_id field
     result = await project_collection.update_one(
         {"_id": ObjectId(project_id)},
-        {"$set": {"manager_id": ObjectId(manager_id)}}
+        {"$set": {"manager_id": ObjectId(manager_id), "manager_email": manager.get("email")}}
     )
 
     if result.modified_count == 0:
@@ -32,10 +32,13 @@ async def assign_manager_to_project(project_id: str, manager_id: str):
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Failed to assign manager")
     
+    # Send email notification
+    await send_manager_assignment_email(manager, project)
+    
     return {"message": f"Manager {manager_id} successfully assigned to Project {project_id}"}
 
 # Function to deassign manager from a project
-async def deassign_manager_from_project(project_id: str,manager_id:str):
+async def deassign_manager_from_project(project_id: str, manager_id: str):
     if not ObjectId.is_valid(project_id) or not ObjectId.is_valid(manager_id):
         raise HTTPException(status_code=400, detail="Invalid project ID format")
 
@@ -52,11 +55,16 @@ async def deassign_manager_from_project(project_id: str,manager_id:str):
     # Remove the manager by setting it to None
     result = await project_collection.update_one(
         {"_id": ObjectId(project_id)},
-        {"$unset": {"manager_id": ""}}
+        {"$unset": {"manager_id": "", "manager_email": ""}}
     )
 
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Failed to deassign manager")
+    
+    # Send email notification
+    manager = await user_collection.find_one({"_id": ObjectId(manager_id)})
+    if manager:
+        await send_manager_removal_email(manager, project)
 
     return {"message": f"Manager {manager_id} removed from Project {str(project_id)}"}
 
@@ -112,12 +120,14 @@ async def assign_developers_to_project(project_id: str, developer_id: str):
 
     # Add the new developer
     updated_developers = existing_developers + [ObjectId(developer_id)]
+    
     # Fetch manager ID from email
     manager = await user_collection.find_one({"email": project.get('manager_email')})
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
     
     manager_id = manager['_id']
+    manager_email = manager.get('email')
 
     # Update or create project team entry
     if project_team:
@@ -133,7 +143,10 @@ async def assign_developers_to_project(project_id: str, developer_id: str):
         )
         if not insert_result.inserted_id:
             raise HTTPException(status_code=500, detail="Insertion failed.")
-
+    
+     # Send email notification
+    send_developer_assigned_email(developer, project, manager_email)
+    
     return {"message": "Developers assigned successfully"}
 
 # Function to deassign developers from a project
@@ -168,6 +181,13 @@ async def deassign_developers_from_project(project_id: str, developer_id: str):
 
     # Remove only selected developers
     updated_developers = [dev for dev in existing_developers if dev != ObjectId(developer_id)]
+    
+    # Fetch manager ID from email
+    manager = await user_collection.find_one({"email": project.get('manager_email')})
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+    
+    manager_email = manager.get('email')
 
     # Update project team document
     result = await project_team_collection.update_one(
@@ -178,4 +198,6 @@ async def deassign_developers_from_project(project_id: str, developer_id: str):
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Failed to deassign developers")
 
+    # Send email notification
+    send_developer_deassigned_email(developer, project, manager_email)
     return {"message": "Developers deassigned successfully"}

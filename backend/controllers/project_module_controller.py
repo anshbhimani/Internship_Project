@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from bson import ObjectId
-from config.database import project_modules_collection,status_collection
-from models.project_module_model import ProjectModule, ProjectModuleOut
-from models.status_model import StatusOut
+from config.database import project_modules_collection
+from models.project_module_model import ProjectModule
+from typing import List
 
 async def create_project_module(module: ProjectModule):
     module_dict = module.dict()
@@ -35,3 +35,7 @@ async def delete_project_module(module_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Module not found")
     return {"message": "Module deleted successfully"}
+
+async def get_modules_by_project(project_id: str) -> List[ProjectModule]:
+    modules = await ProjectModule.find({"project_id": project_id}).to_list()
+    return modules

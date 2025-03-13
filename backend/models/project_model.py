@@ -9,6 +9,7 @@ class Project(BaseModel):
     estimatedHours: int
     startDate: str
     completionDate: str
+    manager_email:Optional[str]
 
 class ProjectOut(Project):
     project_id: str = Field(alias='_id')

@@ -23,12 +23,12 @@ export const AddTask = () => {
   };
   useEffect(() => {
     fetchProjects();
-  });
+  },[]);
 
   // Fetch modules and statuses when a project is selected
   const fetchModulesAndStatuses = async (projectId) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/modules/modules/${projectId}/modules-statuses/`);
+      const res = await axios.get(`${API_BASE_URL}/projects/${projectId}/modules-statuses/`);
       setModules(res.data.modules);  // Update modules based on the selected project
 
       // Set the default status to 'Assigned' after fetching statuses

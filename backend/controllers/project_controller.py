@@ -6,6 +6,7 @@ from bson import ObjectId
 async def create_project(project: Project):
     # Admin creates a project without assigning developers
     project_data = project.dict()
+    print(project_data)
     # If you need to process the manager_email, add logic here, e.g., check if manager_email exists in the user database
     manager = await user_collection.find_one({"email": project_data["manager_email"], "role": "manager"})
     if not manager:

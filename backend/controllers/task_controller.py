@@ -1,5 +1,7 @@
 from models.task_model import Task, TaskOut
 from config.database import user_task_colection,tasks_collection,project_collection,status_collection
+from controllers.project_module_controller import get_modules_by_project
+from controllers.status_controller import get_all_status
 from fastapi import HTTPException
 from bson import ObjectId
 
@@ -79,15 +81,18 @@ async def delete_task(task_id: str):
 
     return {"message": "Task deleted successfully"}
 
+ 
+async def get_modules_and_statuses(project_id: str):
+    try:
+        # Fetch modules for the given project
+        modules = await get_modules_by_project(project_id)
 
-# async def taskId_to_userId(task_id: str):
-#     result_cursor = await user_task_colection.find({"taskid": task_id})
-#     result = await result_cursor.to_list(length=None)
+        # Fetch all statuses (or filter if you need specific statuses related to the project)
+        statuses = await get_all_status()
 
-#     if not result:
-#         raise HTTPException(status_code=404, detail="User for task not found")
-
-#     return result  
+        return {"modules": modules, "statuses": statuses}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching modules and statuses: {str(e)}")
 
 async def get_tasks_for_developer(developer_id: str, project_id: str):
     """Retrieve tasks for a developer in a specific project"""

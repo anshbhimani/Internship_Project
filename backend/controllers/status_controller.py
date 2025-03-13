@@ -2,7 +2,7 @@ from models.status_model import Status,StatusOut
 from config.database import status_collection
 from fastapi import HTTPException
 from bson import ObjectId
-from typing import List
+from controllers.project_module_controller import get_modules_by_project
 
 async def create_status(status:Status):
     status_data = status.dict()
@@ -61,3 +61,15 @@ async def update_status(status_id: str, status: Status):
     updated_status["_id"] = str(updated_status["_id"])  # Ensure `_id` is in string format
 
     return updated_status
+
+async def get_modules_and_statuses(project_id: str):
+    try:
+        # Fetch modules for the given project
+        modules = await get_modules_by_project(project_id)
+
+        # Fetch all statuses (or filter if you need specific statuses related to the project)
+        statuses = await get_all_status()
+
+        return {"modules": modules, "statuses": statuses}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching modules and statuses: {str(e)}")

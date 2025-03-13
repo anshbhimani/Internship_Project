@@ -23,13 +23,14 @@ export const AddModule = () => {
 
   useEffect(() => {
     fetchProjects();
-  });
+  },[]);
 
   // Fetch statuses from backend
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/status/statuss`);
+        const res = await axios.get(`${API_BASE_URL}/status/status`);
+        console.log("Fetched statuses:", res.data);
         setStatuses(res.data);  // Set statuses from API
       } catch (error) {
         console.error("Error fetching statuses:", error);
@@ -58,7 +59,7 @@ export const AddModule = () => {
       };
     console.log("Request data : ", requestData);
     try {
-      const res = await axios.post(`${API_BASE_URL}/modules/modules`, requestData); // Post to backend
+      const res = await axios.post(`${API_BASE_URL}/modules`, requestData); // Post to backend
       if (res.status === 200) {
         alert("Module added successfully");
         reset(); // Clear the form fields after successful submission
@@ -124,8 +125,8 @@ export const AddModule = () => {
               >
                 <option value="">Select Status</option>
                 {statuses.map((status) => (
-                  <option key={status._id} value={status._id}>
-                    {status.statusName} 
+                  <option key={status._id} value={status._id} style={{ color: 'black' }}>
+                    {status.status} 
                   </option>
                 ))}
               </select>
