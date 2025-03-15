@@ -94,42 +94,47 @@ async def get_modules_and_statuses(project_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching modules and statuses: {str(e)}")
 
+from bson import ObjectId
+from fastapi import HTTPException
+
 async def get_tasks_for_developer(developer_id: str, project_id: str):
     """Retrieve tasks for a developer in a specific project"""
     try:
-        # Step 1: Query user_tasks to get task_ids for the developer
         user_tasks_cursor = user_task_colection.find({"userId": developer_id})
         user_tasks = await user_tasks_cursor.to_list(length=None)
 
         if not user_tasks:
             raise HTTPException(status_code=404, detail="No tasks found for this developer.")
 
-        # Extract task_ids from user_tasks
-        task_ids = [str(user_task["taskId"]) for user_task in user_tasks]
+        # Extract task_ids and convert to ObjectId
+        task_ids = [ObjectId(user_task["taskId"]) for user_task in user_tasks if ObjectId.is_valid(user_task["taskId"])]
 
-        # Step 2: Query tasks collection to get tasks for the given task_ids
-        tasks_cursor = tasks_collection.find({"_id": {"$in": [ObjectId(task_id) for task_id in task_ids]}})
+        if not task_ids:
+            raise HTTPException(status_code=404, detail="No valid task IDs found.")
+
+        tasks_cursor = tasks_collection.find({"_id": {"$in": task_ids}})
         tasks = await tasks_cursor.to_list(length=None)
 
         if not tasks:
             raise HTTPException(status_code=404, detail="No tasks found for the given task IDs.")
 
-        # Step 3: Filter tasks by project_id
-        filtered_tasks = [
-            {**task, "_id": str(task["_id"]), "project_id": str(task["project_id"]),
-             "module_id": str(task["module_id"]), "status_id": str(task["status_id"])}
-            for task in tasks if str(task["project_id"]) == project_id
-        ]
+        # Convert ObjectId to strings
+        filtered_tasks = []
+        for task in tasks:
+            task["_id"] = str(task["_id"])
+            task["project_id"] = str(task["project_id"])
+            task["module_id"] = str(task["module_id"]) if "module_id" in task else None
+            task["status_id"] = str(task["status_id"]) if "status_id" in task else None
+            filtered_tasks.append(task)
 
         if not filtered_tasks:
             raise HTTPException(status_code=404, detail="No tasks found for this developer in the specified project.")
 
-        # Step 4: Return the filtered tasks
         return filtered_tasks
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-    
+
 async def get_task_status(task_id: str):
     """Retrieve the status of a task"""
     task = await tasks_collection.find_one({"_id": ObjectId(task_id)})

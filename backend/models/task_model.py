@@ -28,3 +28,7 @@ class TaskOut(Task):
         if isinstance(v, dict) and "_id" in v:
             v["_id"] = str(v["_id"])
         return v
+    
+    @field_validator('status_id', mode="before")
+    def convert_status_id(cls, v):
+        return str(v) if isinstance(v, ObjectId) else v

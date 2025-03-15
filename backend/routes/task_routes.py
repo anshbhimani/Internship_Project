@@ -24,7 +24,7 @@ async def remove_task(task_id: str):
     """API to delete a task"""
     return await delete_task(task_id)
 
-@router.get("/developer/{developer_id}/{project_id}")
+@router.get("/developer/{developer_id}/{project_id}",response_model=List[TaskOut])
 async def get_tasks_for_developer_route(developer_id: str, project_id: str):
     """API to fetch tasks assigned to a specific developer for a project"""
     return await get_tasks_for_developer(developer_id, project_id)
