@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 from config.database import db
 from models.user_task_model import UserTask
-from controllers.email import send_task_assignment_email, send_task_removal_email
+from controllers.email_controller import send_task_assignment_email, send_task_removal_email
 
 # Assign a task to a user
 async def assign_task(user_task: UserTask):

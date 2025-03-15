@@ -1,13 +1,14 @@
 import aiosmtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+import asyncio
 from fastapi import HTTPException
 import os
 
 # Load environment variables
 load_dotenv()
 SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_PORT = 465
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 
@@ -23,8 +24,10 @@ async def send_email(recipient_email, subject, body):
     msg['To'] = recipient_email
 
     try:
+        print("Connecting to SMTP server...")
         server = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=SMTP_PORT,use_tls=True)
         await server.connect()
+
         await server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
         await server.sendmail(GMAIL_USER, recipient_email, msg.as_string())
         await server.quit()

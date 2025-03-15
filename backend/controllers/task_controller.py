@@ -4,7 +4,6 @@ from controllers.project_module_controller import get_modules_by_project
 from controllers.status_controller import get_all_status
 from fastapi import HTTPException
 from bson import ObjectId
-from bson.errors import InvalidId
 
 async def create_task(task: Task):
     """Create a new task"""
@@ -93,9 +92,6 @@ async def get_modules_and_statuses(project_id: str):
         return {"modules": modules, "statuses": statuses}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching modules and statuses: {str(e)}")
-
-from bson import ObjectId
-from fastapi import HTTPException
 
 async def get_tasks_for_developer(developer_id: str, project_id: str):
     """Retrieve tasks for a developer in a specific project"""

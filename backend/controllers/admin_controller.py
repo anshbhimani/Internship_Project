@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from config.database import project_team_collection, user_collection, project_collection
-from controllers.email import send_manager_assignment_email, send_manager_removal_email,send_developer_assigned_email,send_developer_deassigned_email
+from controllers.email_controller import send_manager_assignment_email, send_manager_removal_email,send_developer_assigned_email,send_developer_deassigned_email
 
 # Function to assign manager to project
 async def assign_manager_to_project(project_id: str, manager_id: str):
