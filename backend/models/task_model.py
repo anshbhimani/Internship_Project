@@ -19,7 +19,7 @@ class TaskOut(Task):
     module_id: Optional[str] = None
     project_id: Optional[str] = None  
     status_id: Optional[str] = None
-    image_url:Optional[str] = None
+    ui_image_url:Optional[str] = None
 
     @field_validator('id', 'project_id','module_id', 'status_id', mode="before")
     def convert_objectid(cls, v):
