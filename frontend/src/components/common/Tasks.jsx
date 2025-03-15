@@ -26,6 +26,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+
 
 export const TasksPage = () => {
   const [projects, setProjects] = useState([]);
@@ -346,9 +348,10 @@ export const TasksPage = () => {
                           <Button
                             variant="contained"
                             color="primary"
+                            startIcon={<VisibilityIcon />}
                             onClick={() => setSelectedImage(task.ui_image_url)}
                           >
-                            View Image
+                            View UI Image
                           </Button>
                         )}
                         <Dialog open={!!selectedImage} onClose={() => setSelectedImage(null)} maxWidth="md">
