@@ -28,13 +28,15 @@ export const AddTask = () => {
   // Fetch modules and statuses when a project is selected
   const fetchModulesAndStatuses = async (projectId) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/projects/${projectId}/modules-statuses/`);
+      const res = await axios.get(`${API_BASE_URL}/status/${projectId}/modules-statuses/`);      
       setModules(res.data.modules);  // Update modules based on the selected project
-
+      setStatuses(res.data.statuses);
+      console.log(res.data.statuses);
       // Set the default status to 'Assigned' after fetching statuses
-      const assignedStatus = res.data.statuses.find(status => status.statusName === 'Assigned');
+      const assignedStatus = res.data.statuses.find(status => status.status === 'Assigned');
       if (assignedStatus) {
-        setValue('status_id', assignedStatus._id); // Set 'Assigned' status as default value
+        console.log("Setting status ID:", assignedStatus._id);
+        setValue('status_id', assignedStatus._id); // Ensure ID is set
       }
     } catch (error) {
       console.error("Error fetching modules and statuses:", error);
@@ -43,8 +45,15 @@ export const AddTask = () => {
 
   const submitHandler = async (data) => {
     data.totalMinutes = parseInt(data.totalMinutes, 10); // Ensure it's an integer
-    data.status_id = data.status;
-    
+    data.priority = String(data.priority);
+     
+    if (!data.status_id) {
+      alert("Please select a valid status.");
+      return;
+    }
+
+    console.log("Submitting data:", data);
+
     try {
       const res = await axios.post(`${API_BASE_URL}/tasks/`, data);
       if (res.status === 200) {
@@ -59,20 +68,6 @@ export const AddTask = () => {
       alert("An error occurred. Please try again.");
     }
   };
-
-  // Fetch statuses from backend
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/status/statuss`);
-        setStatuses(res.data);  // Set statuses from API
-      } catch (error) {
-        console.error("Error fetching statuses:", error);
-      }
-    };
-
-    fetchStatuses();
-  }, []);
 
   // Handle project selection
   const handleProjectChange = (e) => {
@@ -141,17 +136,14 @@ export const AddTask = () => {
               <label htmlFor="totalMinutes" className="form-label">Total Minutes</label>
               <input type="number" {...register("totalMinutes")} id="totalMinutes" className="form-control" />
             </div>
+
             <div className="form-group">
-              <label htmlFor="status" className="form-label">Status</label>
-              <select
-                {...register("status")}  
-                id="status"
-                className="form-control"
-              >
+              <label htmlFor="statusId" className="form-label">Status</label>
+              <select {...register("status_id")}  id="statusId" className="form-control">
                 <option value="">Select Status</option>
                 {statuses.map((status) => (
                   <option key={status._id} value={status._id}>
-                    {status.statusName} 
+                    {status.status} 
                   </option>
                 ))}
               </select>

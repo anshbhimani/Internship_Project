@@ -4,6 +4,7 @@ from controllers.project_module_controller import get_modules_by_project
 from controllers.status_controller import get_all_status
 from fastapi import HTTPException
 from bson import ObjectId
+from bson.errors import InvalidId
 
 async def create_task(task: Task):
     """Create a new task"""
@@ -30,19 +31,18 @@ async def get_project_tasks(project_id: str):
     """Retrieve all tasks for a specific project"""
     try:
         project_id = ObjectId(project_id)
-    except Exception:
+    except Exception:  # Using generic Exception as InvalidId might not be recognized
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
 
-    tasks_cursor = tasks_collection.find({"project_id": project_id})
-    tasks = await tasks_cursor.to_list(length=None)
-
+    tasks = await tasks_collection.find({"project_id": project_id}).to_list(None)
+    
+    # Convert _id and ensure all necessary fields are properly formatted
+    formatted_tasks = []
     for task in tasks:
         task["_id"] = str(task["_id"])
-        task["project_id"] = str(task["project_id"])
-        task["module_id"] = str(task["module_id"])
-        task["status_id"] = str(task["status_id"])
-
-    return tasks
+        task["project_id"] = str(task["project_id"])  # Ensure project_id is also a string
+        formatted_tasks.append(TaskOut(**task))
+    return formatted_tasks
 
 async def update_task(task_id: str, updated_task: Task):
     """Update an existing task"""

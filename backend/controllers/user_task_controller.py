@@ -16,8 +16,18 @@ async def assign_task(user_task: UserTask):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    assigned_status = await db["status"].find_one({"status": "Assigned"})
+    if not assigned_status:
+        raise HTTPException(status_code=404, detail="Assigned status not found")
+
+
     # Insert into user_tasks collection
     result = await db["user_tasks"].insert_one(user_task.dict())
+
+    await db["tasks"].update_one(
+        {"_id": ObjectId(user_task.taskId)},
+        {"$set": {"statusId": assigned_status["_id"]}}
+    )
 
     # Send Email Notification
     await send_task_assignment_email(user, task)
