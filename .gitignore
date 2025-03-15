@@ -1,7 +1,10 @@
 *.txt
+!requirements.txt
 node_modules/
 __pycache__/
 /__pycache__
 *.log
 .gitignore
 *.pyc
+UPLOADS/
+.env

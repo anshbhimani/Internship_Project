@@ -1,13 +1,28 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter,Form,UploadFile,File
 from controllers.task_controller import create_task, get_project_tasks, update_task, delete_task,get_tasks_for_developer,update_task_status,get_task_status
-from typing import List
+from typing import List,Optional
 from models.task_model import Task,TaskOut
+
+
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
+# @router.post("/", response_model=dict)
+# async def create_new_task(task: Task):
+#     """API to create a new task"""
+#     return await create_task(task)
+
 @router.post("/", response_model=dict)
-async def create_new_task(task: Task):
+async def create_new_task(title: str = Form(...),
+    priority: str = Form(...),
+    description: str = Form(...),
+    totalMinutes: int = Form(...),
+    module_id: str = Form(...),
+    project_id: str = Form(...),
+    status_id: str = Form(...),
+    image: Optional[UploadFile] = File(None)
+):
     """API to create a new task"""
-    return await create_task(task)
+    return await create_task(title,priority,description,totalMinutes,module_id,project_id,status_id,image)
 
 @router.get("/{project_id}", response_model=List[TaskOut])
 async def fetch_project_tasks(project_id: str):

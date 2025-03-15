@@ -2,29 +2,66 @@ from models.task_model import Task, TaskOut
 from config.database import user_task_colection,tasks_collection,project_collection,status_collection
 from controllers.project_module_controller import get_modules_by_project
 from controllers.status_controller import get_all_status
-from fastapi import HTTPException
+from fastapi import HTTPException,UploadFile,File,Form
+from utils.CloudinaryUtil import upload_image
+from typing import Optional
 from bson import ObjectId
+import os
+import shutil
 
-async def create_task(task: Task):
+
+UPLOAD_DIR = "../UPLOADS"
+
+async def create_task(
+    title: str = Form(...),
+    priority: str = Form(...),
+    description: str = Form(...),
+    totalMinutes: int = Form(...),
+    module_id: str = Form(...),
+    project_id: str = Form(...),
+    status_id: str = Form(...),
+    image: Optional[UploadFile] = File(None)
+):
     """Create a new task"""
-    task_data = task.dict()
-    
-    # Convert string IDs to ObjectId
-    try:
-        task_data["module_id"] = ObjectId(task_data["module_id"])
-        task_data["project_id"] = ObjectId(task_data["project_id"])
-        task_data["status_id"] = ObjectId(task_data["status_id"])
-    except Exception:
+    if not ObjectId.is_valid(module_id) or not ObjectId.is_valid(project_id) or not ObjectId.is_valid(status_id):
         raise HTTPException(status_code=400, detail="Invalid ObjectId format")
     
-    # Validate project
-    project = await project_collection.find_one({"_id": task_data["project_id"]})
+    project = await project_collection.find_one({"_id": ObjectId(project_id)})
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    task_data = {
+        "title": title,
+        "priority": priority,
+        "description": description,
+        "totalMinutes": totalMinutes,
+        "module_id": ObjectId(module_id),
+        "project_id": ObjectId(project_id),
+        "status_id": ObjectId(status_id),
+        "ui_image_url": None
+    }
+    
+    if image:
+        try:
+            file_ext = image.filename.split(".")[-1]
+            file_path = os.path.join(UPLOAD_DIR, f"{ObjectId()}.{file_ext}")
+            # Ensure the directory exists
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+        
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            
+            if not file_ext.lower() in ["jpg", "jpeg", "png"]:
+             raise HTTPException(status_code=400, detail="Invalid image format")
+            
+            task_data["ui_image_url"] = await upload_image(file_path)
 
-    # Insert task into DB
+            os.remove(file_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+    
     result = await tasks_collection.insert_one(task_data)
-    return {"message": "Task created successfully", "id": str(result.inserted_id)}
+    return {"message": "Task created successfully", "id": str(result.inserted_id), "image_url": task_data["ui_image_url"]}
 
 async def get_project_tasks(project_id: str):
     """Retrieve all tasks for a specific project"""
@@ -36,14 +73,19 @@ async def get_project_tasks(project_id: str):
     tasks = await tasks_collection.find({"project_id": project_id}).to_list(None)
     
     # Convert _id and ensure all necessary fields are properly formatted
-    formatted_tasks = []
-    for task in tasks:
-        task["_id"] = str(task["_id"])
-        task["project_id"] = str(task["project_id"])  # Ensure project_id is also a string
-        formatted_tasks.append(TaskOut(**task))
-    return formatted_tasks
+    return [
+    TaskOut(
+        **{
+            **{k: v for k, v in task.items() if k != "image"},
+            "_id": str(task["_id"]),
+            "project_id": str(task.get("project_id", "")),
+            "image_url": task.get("ui_image_url", None)
+        }
+    )
+    for task in tasks
+]
 
-async def update_task(task_id: str, updated_task: Task):
+async def update_task(task_id: str, updated_task: Task,image: Optional[UploadFile] = File(None)):
     """Update an existing task"""
     try:
         task_id = ObjectId(task_id)
@@ -58,6 +100,25 @@ async def update_task(task_id: str, updated_task: Task):
         task_data["project_id"] = ObjectId(task_data["project_id"])
     if "status_id" in task_data:
         task_data["status_id"] = ObjectId(task_data["status_id"])
+        
+    if image:
+        try:
+            file_ext = image.filename.split(".")[-1]
+            file_path = os.path.join(UPLOAD_DIR, f"{ObjectId()}.{file_ext}")
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
+        
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            
+            if not file_ext.lower() in ["jpg", "jpeg", "png"]:
+                raise HTTPException(status_code=400, detail="Invalid image format")
+            
+            task_data["ui_image_url"] = await upload_image(file_path)
+            
+            os.remove(file_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+    
 
     result = await tasks_collection.update_one({"_id": task_id}, {"$set": task_data})
     
@@ -127,6 +188,9 @@ async def get_tasks_for_developer(developer_id: str, project_id: str):
             raise HTTPException(status_code=404, detail="No tasks found for this developer in the specified project.")
 
         return filtered_tasks
+    
+    except HTTPException:
+        raise
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
