@@ -14,13 +14,20 @@ import {
   Select,
   IconButton,
   Menu,
+  Button,
   MenuItem,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   FormControl,
   CircularProgress,
   Chip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
+import CloseIcon from "@mui/icons-material/Close";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+
 
 export const TasksPage = () => {
   const [projects, setProjects] = useState([]);
@@ -33,6 +40,7 @@ export const TasksPage = () => {
   const [anchorEl, setAnchorEl] = useState(null); // For dropdown menu
   const [selectedTask, setSelectedTask] = useState(null); // Track selected task for status change
   const [statuses, setStatuses] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
   const userId = Cookies.get("userId");
   const priorityColors = {
     5: "#e63d37", // High priority (red)
@@ -195,6 +203,7 @@ export const TasksPage = () => {
   
     // Handle status update
   const handleStatusUpdate = async (taskId, statusId) => {
+    if (!taskId) return; 
     try {
       const response = await axios.put(
         `${API_BASE_URL}/tasks/${taskId}/status/${statusId}`
@@ -224,6 +233,7 @@ export const TasksPage = () => {
   // Handle menu closing
   const handleClose = () => {
     setAnchorEl(null);
+    setSelectedTask(null);
   };
 
   return (
@@ -334,6 +344,36 @@ export const TasksPage = () => {
                         }}
                       />
                       <CardContent>
+                        {task.ui_image_url && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => setSelectedImage(task.ui_image_url)}
+                          >
+                            View UI Image
+                          </Button>
+                        )}
+                        <Dialog open={!!selectedImage} onClose={() => setSelectedImage(null)} maxWidth="md">
+                        <DialogTitle>
+                          Task Image
+                          <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={() => setSelectedImage(null)}
+                            sx={{ position: "absolute", right: 8, top: 8 }}
+                          >
+                            <CloseIcon />
+                          </IconButton>
+                        </DialogTitle>
+                        <DialogContent>
+                          {selectedImage && (
+                            <img src={selectedImage} alt="Task" style={{ width: "100%" }} />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                      </CardContent>
+                      <CardContent>
                         <Typography variant="body2">
                           <strong>Description:</strong> {task.description}
                         </Typography>
@@ -359,6 +399,7 @@ export const TasksPage = () => {
                               : "Not assigned"}
                           </span>
                         </Typography>
+                        
 
                         <Typography variant="body2" sx={{ mt: 1 }}>
                           <strong>Time Allotted:</strong> {task.totalMinutes}{" "}
@@ -369,12 +410,18 @@ export const TasksPage = () => {
                           <IconButton onClick={(e) => handleClick(e, task)}>
                             <EditIcon />
                           </IconButton>
-                          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                          <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                            transformOrigin={{ vertical: "top", horizontal: "left" }}
+                          >
                             {statuses.length > 0 ? (
                               statuses.map((status) => (
                                 <MenuItem
                                   key={status._id}
-                                  onClick={() => handleStatusUpdate(selectedTask._id, status._id)}
+                                  onClick={() => handleStatusUpdate(selectedTask?._id, status._id)}
                                 >
                                   {status.status}
                                 </MenuItem>
@@ -383,7 +430,6 @@ export const TasksPage = () => {
                               <MenuItem disabled>Loading...</MenuItem>
                             )}
                           </Menu>
-
 
                         </Typography>
                       </CardContent>

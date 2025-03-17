@@ -1,6 +1,6 @@
 .sidebar {
     width: 13vw;
-    height: 120vh;
+    height: 100vh;
     overflow: auto;
     transition: width 0.3s ease-in-out;
   }
