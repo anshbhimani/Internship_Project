@@ -15,6 +15,47 @@ import {
   CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { styled } from '@mui/material/styles';
+
+const baseColor = "#4A90E2";  // Bright Blue
+const lightShade = "#D6E4F0"; // Soft Light Blue
+const darkShade = "#255C99";  // Dark Blue
+// const hoverShade = "#70E4EF"; // Vibrant Blue
+const backgroundColor = "#F7F9FC"; // Very Light Gray
+
+const StyledCard = styled(Card)(() => ({
+  boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+  borderRadius: '12px',
+  backgroundColor: lightShade,  // Light background for card
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
+    // backgroundColor: hoverShade, // Hover effect with vibrant blue
+  },
+}));
+
+const StyledChip = styled(Chip)(() => ({
+  backgroundColor: baseColor,  // Bright blue for chips
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: darkShade, // Dark blue on hover
+  },
+  margin: '4px',
+}));
+
+const StyledAccordion = styled(Accordion)(() => ({
+  boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+  borderRadius: '8px',
+  marginTop: '10px',
+  '& .MuiAccordionSummary-root': {
+    backgroundColor: lightShade,  // Soft blue for accordion summary
+  },
+  '& .MuiAccordionDetails-root': {
+    backgroundColor: backgroundColor,  // Very light gray for accordion details
+  },
+}));
+
 
 export const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -23,7 +64,6 @@ export const Projects = () => {
   const managerId = Cookies.get("userId");
   const [modulesMap, setModulesMap] = useState({});
   const [statusesMap, setStatusesMap] = useState({});
-
 
   useEffect(() => {
     fetchManagerProjects();
@@ -35,10 +75,10 @@ export const Projects = () => {
       const projectsData = response.data;
       setProjects(projectsData);
 
-      // Fetch developers for each project
+      // Fetch developers and modules for each project
       projectsData.forEach((project) => {
-        fetchProjectDevelopers(project._id)
-        fetchProjectModules(project._id)
+        fetchProjectDevelopers(project._id);
+        fetchProjectModules(project._id);
       });
 
       setLoading(false);
@@ -50,46 +90,38 @@ export const Projects = () => {
 
   const fetchProjectModules = async (projectId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/modules/${projectId}/modules-statuses/`);
+      const response = await axios.get(`${API_BASE_URL}/status/${projectId}/modules-statuses/`);
       const { modules, statuses } = response.data;
-      console.log("Module and status" + response.data);
-      
-  
-      // Map statuses by ID
       const statusLookup = {};
       statuses.forEach((status) => {
         statusLookup[status._id] = status.statusName;
       });
-  
+
       setStatusesMap((prev) => ({
         ...prev,
-        ...statusLookup,  // Merge new statuses into the existing map
+        ...statusLookup,
       }));
-  
+
       setModulesMap((prev) => ({
         ...prev,
-        [projectId]: modules,  // Store modules for this project
+        [projectId]: modules,
       }));
     } catch (error) {
       console.error("Error fetching project modules:", error);
     }
   };
-  
 
   const fetchProjectDevelopers = async (projectId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/projects/${projectId}/developers`);
-      
-      // Store developer details (name & email) mapped to the project ID
       setDeveloperMap((prev) => ({
         ...prev,
-        [projectId]: response.data,  // Store array of developers for this project
+        [projectId]: response.data,
       }));
     } catch (error) {
       console.error("Error fetching project developers:", error);
     }
   };
-  
 
   return (
     <Grid container spacing={3} sx={{ p: 3 }}>
@@ -100,62 +132,68 @@ export const Projects = () => {
       ) : projects.length > 0 ? (
         projects.map((project) => (
           <Grid item xs={12} md={6} key={project._id}>
-            <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+            <StyledCard>
               <CardHeader
                 title={project.title}
                 subheader={`Start Date: ${project.startDate} | Completion: ${project.completionDate}`}
+                sx={{ backgroundColor: darkShade, color: '#fff',
+                  '& .MuiCardHeader-subheader': {
+                   color: '#fff',}
+                 }} // Dark background for header
               />
               <CardContent>
-                <Typography variant="body1">{project.description}</Typography>
-                <Typography variant="body2" sx={{ mt: 2 }}>
+                <Typography variant="body1" sx={{ color: darkShade }}>
+                  {project.description}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 2, color: darkShade }}>
                   <strong>Technology:</strong> {project.technology}
                 </Typography>
 
-                {/* Developers List */}
-                <Typography variant="body2" sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ mt: 2, color: darkShade }}>
                   <strong>Developers:</strong>
                 </Typography>
                 {developerMap[project._id]?.length > 0 ? (
                   developerMap[project._id].map((dev) => (
-                    <Chip 
-                      key={dev._id} 
-                      label={`${dev.firstname} (${dev.email})`} 
-                      sx={{ m: 0.5 }} 
-                    />
+                    <StyledChip key={dev._id} label={`${dev.firstname} (${dev.email})`} />
                   ))
                 ) : (
                   <Typography variant="body2">No developers assigned.</Typography>
                 )}
 
-                
-                {/* Modules with Expandable Details */}
-              <Typography variant="body2" sx={{ mt: 2 }}>
-                <strong>Modules:</strong>
-              </Typography>
-              {modulesMap[project._id]?.length > 0 ? (
-                modulesMap[project._id].map((module) => (
-                  <Accordion key={module._id} sx={{ mt: 1 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>{module.moduleName}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Typography variant="body2"><strong>Description:</strong> {module.description}</Typography>
-                      <Typography variant="body2"><strong>Estimated Hours:</strong> {module.estimatedHours}</Typography>
-                      <Typography variant="body2"><strong>Start Date:</strong> {module.startDate}</Typography>
-                      <Typography variant="body2"><strong>Status:</strong> {statusesMap[module.status] || "Unknown"}</Typography>
-                    </AccordionDetails>
-                  </Accordion>
-                ))
-              ) : (
-                <Typography variant="body2">No modules available.</Typography>
-              )}
-
+                <Typography variant="body2" sx={{ mt: 2, color: darkShade }}>
+                  <strong>Modules:</strong>
+                </Typography>
+                {modulesMap[project._id]?.length > 0 ? (
+                  modulesMap[project._id].map((module) => (
+                    <StyledAccordion key={module._id}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>{module.moduleName}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Typography variant="body2" sx={{ color: darkShade }}>
+                          <strong>Description:</strong> {module.description}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: darkShade }}>
+                          <strong>Estimated Hours:</strong> {module.estimatedHours}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: darkShade }}>
+                          <strong>Start Date:</strong> {module.startDate}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: darkShade }}>
+                          <strong>Status:</strong> {statusesMap[module.status] || "Unknown"}
+                        </Typography>
+                      </AccordionDetails>
+                    </StyledAccordion>
+                  ))
+                ) : (
+                  <Typography variant="body2">No modules available.</Typography>
+                )}
               </CardContent>
-            </Card>
+            </StyledCard>
           </Grid>
         ))
       ) : (
-        <Typography variant="h6" sx={{ textAlign: "center", width: "100%" }}>
+        <Typography variant="h6" sx={{ textAlign: "center", width: "100%", color: darkShade }}>
           No projects available.
         </Typography>
       )}
