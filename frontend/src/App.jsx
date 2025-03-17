@@ -30,7 +30,7 @@ function App() {
         <div className="row">
           {/* ✅ Sidebar will always be visible if userRole exists */}
           {userRole && <UserSidebar userRole={userRole} onLogout={handleLogout} />}
-          <div className="col-md-10 p-4">
+          <div className={`col-md-10 ${userRole ? "p-4" : "d-flex justify-content-center align-items-center vh-100"}`}>
             <Routes>
               <Route path="/login" element={<Login setUserRole={setUserRole} />} />
               <Route path="/profile/:userRole" element={<ErrorPage />} />
