@@ -5,7 +5,7 @@ import { AddModule } from "./AddModule";
 import { AddTask } from "./AddTask";
 import AssignProjectToDevelopers from "./AssignProjectToDevelopers";
 import { AddUser } from "./AddUser";
-
+import { AdminHome } from "./AdminHome";
 
 
 export const AdminDashboard = () => {
@@ -18,6 +18,7 @@ export const AdminDashboard = () => {
     <div>
       <h2>Welcome Admin</h2>
       <hr />
+      {activeTab === "home" && <AdminHome/>}
       {activeTab === "addDevelopers" && <AssignProjectToDevelopers />}
       {activeTab === "addProject" && <ProjectForm />}
       {activeTab === "addModule" && <AddModule/>}

@@ -1,0 +1,22 @@
+.manager-home {
+    text-align: center;
+    background-color: #eef7ff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .manager-message, .manager-stat {
+    font-size: 1.2em;
+    color: #222;
+  }
+  
+  .motivational-text {
+    font-style: italic;
+    color: #28a745;
+  }
+  
+  .custom-hr {
+    border: 1px solid #bbb;
+  }
+  

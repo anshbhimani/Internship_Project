@@ -6,6 +6,7 @@ import { API_BASE_URL } from "../../App";
 import Cookies from "js-cookie";
 import { Projects } from "./Projects";
 import { AssignTask } from "./AssignTask";
+import { ManagerHome } from "./ManagerHome";
 
 
 export const ManagerDashboard = () => {
@@ -58,6 +59,7 @@ export const ManagerDashboard = () => {
       
       {/* Render the selected component */}
       <div className="mt-4">
+        {activeTab === "home" && <ManagerHome/>}
         {activeTab === "viewTasks" && <TasksPage />}
         {activeTab === "viewProjects" && <Projects/>}
         {activeTab === "assignTask" && <AssignTask/>}

@@ -1,0 +1,36 @@
+/* Admin Home Styles */
+.admin-home {
+    text-align: center;
+    background-color: #f4f4f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .admin-message, .admin-stat {
+    font-size: 1.2em;
+    color: #333;
+  }
+  
+  .motivational-text {
+    font-style: italic;
+    color: #007bff;
+  }
+  
+  .custom-hr {
+    border: 1px solid #ccc;
+  }
+  
+  .admin-home ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .admin-home li {
+    background: #fff;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
