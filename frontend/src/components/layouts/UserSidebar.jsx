@@ -32,12 +32,17 @@ export const UserSidebar = ({ userRole, onLogout }) => {
 
       <ul className="list-unstyled">
         <li>
-          <Link to={`/profile/${userRole}`} className={`d-block text-white p-2 ${activeTab === "addProject" ? "fw-bold" : ""}`}>
+          <Link to={`/profile/${userRole}?tab=home`} className={`d-block text-white p-2 ${activeTab === "addProject" ? "fw-bold" : ""}`}>
             Home
           </Link>
         </li>
         {userRole === "admin" && (
           <>
+           <li>
+              <Link to="?tab=addUser" className={`d-block text-white p-2 ${activeTab === "addUser" ? "fw-bold" : ""}`}>
+                Add User
+              </Link>
+            </li>
             <li>
               <Link to="?tab=addProject" className={`d-block text-white p-2 ${activeTab === "addProject" ? "fw-bold" : ""}`}>
                 Add Project
@@ -80,12 +85,19 @@ export const UserSidebar = ({ userRole, onLogout }) => {
             </li>
           </>
         )}
-        {userRole === "developer" && (
-          <li>
-            <Link to="?tab=viewTasks" className={`d-block text-white p-2 ${activeTab === "viewTasks" ? "fw-bold" : ""}`}>
-              View Tasks
-            </Link>
-          </li>
+       {userRole === "developer" && (
+          <>
+            <li>
+              <Link to="?tab=viewTasks" className={`d-block text-white p-2 ${activeTab === "viewTasks" ? "fw-bold" : ""}`}>
+                View Tasks
+              </Link>
+            </li>
+            <li>
+              <Link to="?tab=viewProjects" className={`d-block text-white p-2 ${activeTab === "viewProjects" ? "fw-bold" : ""}`}>
+                View Projects
+              </Link>
+            </li>
+          </>
         )}
         <li>
           <button className="logout btn btn-danger mt-3" onClick={handleLogout}>

@@ -11,6 +11,7 @@ import { TasksPage } from "./components/common/Tasks";
 import { AddTask } from "./components/admin/AddTask";
 import { AddModule } from "./components/admin/AddModule"; // Import AddModule
 import { AssignTask } from "./components/manager/AssignTask";
+import { AddUser } from "./components/admin/AddUser";
 
 export const API_BASE_URL = "http://localhost:6565";
 
@@ -38,13 +39,13 @@ function App() {
               {/* Conditional Dashboard Routes */}
               <Route path="/profile/admin" element={userRole === "admin" ? <AdminDashboard /> : <Navigate to="/login" />} />
               <Route path="/admin/add_project" element={userRole === "admin" ? <ProjectForm /> : <Navigate to="/login" />} />
+              <Route path="/admin/add_user" element={userRole === "admin" ? <AddUser /> : <Navigate to="/login" />} />
               <Route path="/profile/manager" element={userRole === "manager" ? <ManagerDashboard /> : <Navigate to="/login" />} />
               <Route path="/profile/developer" element={userRole === "developer" ? <DeveloperDashboard /> : <Navigate to="/login" />} />
 
               {/* New Routes for Tasks and AddModule */}
-              <Route path="/tasks" element={userRole ? <TasksPage /> : <Navigate to="/login" />} />
               <Route path="/manager/add_task" element={userRole === "manager" ? <AddTask /> : <Navigate to="/login" />} />
-              <Route path="/manager/add_module" element={userRole === "manager" ? <AddModule /> : <Navigate to="/login" />} /> {/* Add AddModule route */}
+              <Route path="/manager/add_module" element={userRole === "manager" ? <AddModule /> : <Navigate to="/login" />} />
               <Route path="/manager/assign_task" element={userRole === "manager" ? <AssignTask /> : <Navigate to="/login" />} />
               
               {/* Redirect unknown routes to login */}

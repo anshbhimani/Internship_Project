@@ -35,4 +35,4 @@ async def user_login(user: UserLogin):
     if not bcrypt.checkpw(user.password.encode("utf-8"), stored_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    return {"message": "Login successful", "user_id": str(existing_user["_id"]),"role":existing_user["role"]}
+    return {"message": "Login successful", "user_id": str(existing_user["_id"]),"role":existing_user["role"],"name":existing_user["firstname"]}

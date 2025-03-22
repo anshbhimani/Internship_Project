@@ -4,6 +4,7 @@ import { ProjectForm } from "./ProjectForm";
 import { AddModule } from "./AddModule";
 import { AddTask } from "./AddTask";
 import AssignProjectToDevelopers from "./AssignProjectToDevelopers";
+import { AddUser } from "./AddUser";
 
 
 
@@ -21,6 +22,7 @@ export const AdminDashboard = () => {
       {activeTab === "addProject" && <ProjectForm />}
       {activeTab === "addModule" && <AddModule/>}
       {activeTab === "addTask" && <AddTask />}
+      {activeTab === "addUser" && <AddUser />}
     </div>
   );
 };

@@ -4,6 +4,8 @@ import { TasksPage } from "../common/Tasks";
 import axios from "axios";
 import { API_BASE_URL } from "../../App";
 import Cookies from "js-cookie";
+import { DeveloperHome } from "./DeveloperHome";
+import { DeveloperProjects } from "./DeveloperProjects";
 
 export const DeveloperDashboard = () => {
   const location = useLocation();
@@ -21,7 +23,11 @@ export const DeveloperDashboard = () => {
           const res = await axios.get(url);
           setProjects(res.data); // Set projects from API
         } catch (error) {
-          setError("Error fetching projects");
+          if (error.response && error.response.status === 404) {
+            setError("No projects are assigned to this developer");
+          } else {
+            setError("Error fetching projects");
+          }
         } finally {
           setLoading(false); // Set loading to false once data is fetched or on error
         }
@@ -39,12 +45,11 @@ export const DeveloperDashboard = () => {
 
   return (
     <div>
-      <h1>Welcome Developer</h1>
-      <hr />
       {loading && <p>Loading projects...</p>}
-      {error && <p>{error}</p>}
       <div className="mt-4">
+        {activeTab === "home" && <DeveloperHome/>}
         {activeTab === "viewTasks" && <TasksPage projects={projects} />}
+        {activeTab === "viewProjects" && <DeveloperProjects />} 
       </div>
     </div>
   );

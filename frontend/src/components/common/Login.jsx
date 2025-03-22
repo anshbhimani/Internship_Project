@@ -23,7 +23,8 @@ export const Login = ({ setUserRole }) => {
         setUserRole(response.data.role);
         Cookies.set("userId", response.data.user_id, { expires: 1 / 24 });
         Cookies.set("role", response.data.role, { expires: 1 / 24 });
-        navigate(`/profile/${response.data.role}`);
+        Cookies.set("name", response.data.name, { expires: 1 / 24 });
+        navigate(`/profile/${response.data.role}?tab=home`);
       } else {
         alert("Login failed: Role not assigned");
       }
@@ -34,46 +35,48 @@ export const Login = ({ setUserRole }) => {
   };
 
   return (
-    <div className="overlay">
-      <form onSubmit={handleLogin}>
-        <div className="con">
-          <header className="head-form">
-            <h2>Log In</h2>
-            <p>Login here using your email and password</p>
-          </header>
-          <br />
-          <div className="field-set">
-            <span className="input-item">
-              <i className="fa fa-user-circle" />
-            </span>
-            <input
-              className="form-input"
-              type="text"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="login-container">
+      <div className="overlay">
+        <form onSubmit={handleLogin}>
+          <div className="con">
+            <header className="head-form">
+              <h2>Log In</h2>
+              <p>Login here using your email and password</p>
+            </header>
             <br />
-            <span className="input-item">
-              <i className="fa fa-key" />
-            </span>
-            <input
-              className="form-input"
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <span>
-              <i className="fa fa-eye" aria-hidden="true" type="button" id="eye" />
-            </span>
-            <br />
-            <button type="submit" className="log-in"> Log In </button>
+            <div className="field-set">
+              <span className="input-item">
+                <i className="fa fa-user-circle" />
+              </span>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <br />
+              <span className="input-item">
+                <i className="fa fa-key" />
+              </span>
+              <input
+                className="form-input"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <span>
+                <i className="fa fa-eye" aria-hidden="true" type="button" id="eye" />
+              </span>
+              <br />
+              <button type="submit" className="log-in"> Log In </button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

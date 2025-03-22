@@ -27,7 +27,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
+import "./Tasks.css";
 
 export const TasksPage = () => {
   const [projects, setProjects] = useState([]);
@@ -120,85 +120,85 @@ export const TasksPage = () => {
     fetchStatuses();
   }, []);
 
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const url =
+        role === "manager"
+          ? `${API_BASE_URL}/tasks/${selectedProject._id}`
+          : `${API_BASE_URL}/tasks/developer/${userId}/${selectedProject._id}`;
+
+      const res = await axios.get(url);
+      const taskList = res.data;
+      setTasks(taskList);
+
+      // Fetch task details (assigned users & modules)
+      const userAssignments = {};
+      const moduleMappings = {};
+      const statusMappings = {};
+
+      await Promise.all(
+        taskList.map(async (task) => {
+          try {
+            // Fetch users assigned to the task
+            const userRes = await axios.get(
+              `${API_BASE_URL}/user-tasks/task/${task._id}`
+            );
+            userAssignments[task._id] = userRes.data.map((user) => ({
+              _id: user.user_id, // Ensure this exists
+              full_name: user.full_name, // Ensure this exists
+            }));
+          } catch (error) {
+            console.error(`Error fetching users for task ${task._id}:`, error);
+          }
+
+          if (task.module_id) {
+            try {
+              // Fetch module details
+              const moduleRes = await axios.get(
+                `${API_BASE_URL}/modules/${task.module_id}`
+              );
+              moduleMappings[task._id] = moduleRes.data; 
+            } catch (error) {
+              console.error(`Error fetching module for task ${task._id}:`, error);
+              moduleMappings[task._id] = "Unknown Module";
+            }
+          }
+
+          if (task.status_id) {
+            try {
+              // Fetch status name
+              const statusRes = await axios.get(
+                `${API_BASE_URL}/status/status/${task.status_id}`
+              );
+              statusMappings[task._id] = statusRes.data.status;
+            } catch (error) {
+              console.error(`Error fetching status for task ${task._id}:`, error);
+              statusMappings[task._id] = "Unknown Status";
+            }
+          }
+        })
+      );
+
+      setUserTaskAssignments(userAssignments);
+      setTaskModules(moduleMappings);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => ({
+          ...task,
+          statusName: statusMappings[task._id] || "Unknown Status",
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch tasks based on selected project
   useEffect(() => {
     if (!selectedProject) return;
-      const fetchTasks = async () => {
-        try {
-          setLoading(true);
-          const url =
-            role === "manager"
-              ? `${API_BASE_URL}/tasks/${selectedProject._id}`
-              : `${API_BASE_URL}/tasks/developer/${userId}/${selectedProject._id}`;
-    
-          const res = await axios.get(url);
-          const taskList = res.data;
-          setTasks(taskList);
-    
-          // Fetch task details (assigned users & modules)
-          const userAssignments = {};
-          const moduleMappings = {};
-          const statusMappings = {};
-    
-          await Promise.all(
-            taskList.map(async (task) => {
-              try {
-                // Fetch users assigned to the task
-                const userRes = await axios.get(
-                  `${API_BASE_URL}/user-tasks/task/${task._id}`
-                );
-                userAssignments[task._id] = userRes.data.map((user) => ({
-                  _id: user.user_id, // Ensure this exists
-                  full_name: user.full_name, // Ensure this exists
-                }));
-              } catch (error) {
-                console.error(`Error fetching users for task ${task._id}:`, error);
-              }
-    
-              if (task.module_id) {
-                try {
-                  // Fetch module details
-                  const moduleRes = await axios.get(
-                    `${API_BASE_URL}/modules/${task.module_id}`
-                  );
-                  moduleMappings[task._id] = moduleRes.data; 
-                } catch (error) {
-                  console.error(`Error fetching module for task ${task._id}:`, error);
-                  moduleMappings[task._id] = "Unknown Module";
-                }
-              }
-
-              if (task.status_id) {
-                try {
-                  // Fetch status name
-                  const statusRes = await axios.get(
-                    `${API_BASE_URL}/status/status/${task.status_id}`
-                  );
-                  statusMappings[task._id] = statusRes.data.status;
-                } catch (error) {
-                  console.error(`Error fetching status for task ${task._id}:`, error);
-                  statusMappings[task._id] = "Unknown Status";
-                }
-              }
-            })
-          );
-    
-          setUserTaskAssignments(userAssignments);
-          setTaskModules(moduleMappings);
-          setTasks((prevTasks) =>
-            prevTasks.map((task) => ({
-              ...task,
-              statusName: statusMappings[task._id] || "Unknown Status",
-            }))
-          );
-        } catch (error) {
-          console.error("Error fetching tasks:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-    
-      fetchTasks();
+    fetchTasks();
     }, [selectedProject, role, userId]);
   
     // Handle status update
@@ -209,13 +209,7 @@ export const TasksPage = () => {
         `${API_BASE_URL}/tasks/${taskId}/status/${statusId}`
       );
       if (response.status === 200) {
-        setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task._id === taskId
-              ? { ...task, statusName: response.data.status_name }
-              : task
-          )
-        );
+        fetchTasks();
         setAnchorEl(null); // Close the menu after updating status
         alert("Status updated successfully!");
       }
@@ -238,6 +232,8 @@ export const TasksPage = () => {
 
   return (
     <Grid container spacing={3} sx={{ p: 3 }}>
+      <h1>View Tasks</h1>
+      <hr className="custom-hr"></hr>
       {loading ? (
         <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
           <CircularProgress />

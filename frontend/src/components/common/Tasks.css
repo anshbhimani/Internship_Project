@@ -1,0 +1,8 @@
+.custom-hr {
+    border: none; /* Remove default border */
+    height: 3px; /* Set thickness */
+    background-color: #000000 !important; /* Ensure the color applies */
+    width: 100%;
+    margin: 10px 0 !important; /* Adds spacing above and below */
+    opacity: 1; /* Ensure full visibility */
+}

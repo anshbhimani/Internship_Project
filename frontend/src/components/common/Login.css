@@ -35,7 +35,7 @@ opacity: .95;
 
 /* Start form  attributes */
 /* Center the form in the middle of the page */
-form {
+.login-container form{
     width: 450px;
     min-height: 500px;
     height: auto;
@@ -59,7 +59,7 @@ form {
 }
 
 /* form Container */
-form .con {
+.login-container form .con {
     display: -webkit-flex;
     display: flex;
   
@@ -73,18 +73,18 @@ form .con {
 }
 
 /* the header form form */
-header {
+.login-container header {
     margin: 2% auto 10% auto;
     text-align: center;
 }
 /* Login title form form */
-header h2 {
+.login-container header h2 {
     font-size: 250%;
     font-family: 'Playfair Display', serif;
     color: #3e403f;
 }
 /*  A welcome message or an explanation of the login form */
-header p {letter-spacing: 0.05em;}
+.login-container header p {letter-spacing: 0.05em;}
 
 
 
@@ -92,7 +92,7 @@ header p {letter-spacing: 0.05em;}
 /* //////////////////////////////////////////// */
 
 
-.input-item {
+.login-container .input-item {
     background: #fff;
     color: #333;
     padding: 14.5px 0px 15px 9px;
@@ -102,7 +102,7 @@ header p {letter-spacing: 0.05em;}
 
 
 /* Show/hide password Font Icon */
-#eye {
+.login-container #eye {
     background: #fff;
     color: #333;
   
@@ -120,7 +120,7 @@ header p {letter-spacing: 0.05em;}
     cursor: pointer;
 }
 /* inputs form  */
-input[class="form-input"]{
+.login-container input[class="form-input"]{
     width: 240px;
     height: 50px;
   
@@ -138,9 +138,9 @@ input[class="form-input"]{
     transition: 0.2s linear;
     
 }
-input[id="txt-input"] {width: 250px;}
+.login-container input[id="txt-input"] {width: 250px;}
 /* focus  */
-input:focus {
+.login-container input:focus {
     transform: translateX(-2px);
     border-radius: 5px;
 }
@@ -150,9 +150,9 @@ input:focus {
 
 /* input[type="text"] {min-width: 250px;} */
 /* buttons  */
-.overlay button,
-.overlay .log-in,
-.overlay .submits  {
+.login-container .overlay button,
+.login-container .overlay .log-in,
+.login-container .overlay .submits  {
     display: inline-block;
     color: #252537;
   
@@ -172,31 +172,31 @@ input:focus {
     letter-spacing: 0.05em;
 }
 
-.overlay .log-in{
+.login-container .overlay .log-in{
     margin-top: 7%;
 }
 /* Submits */
-.submits {
+.login-container .submits {
     width: 48%;
     display: inline-block;
     margin-left: 15%;
 }
 
 /*       Forgot Password button FAF3DD  */
-.frgt-pass {background: transparent;}
+.login-container .frgt-pass {background: transparent;}
 
 /*     Sign Up button  */
-.sign-up {background: #B8F2E6;}
+.login-container .sign-up {background: #B8F2E6;}
 
 
 /* buttons hover */
-button:hover {
+.login-container button:hover {
     transform: translatey(3px);
     box-shadow: none;
 }
 
 /* buttons hover Animation */
-button:hover {
+.login-container button:hover {
     animation: ani9 0.4s ease-in-out infinite alternate;
 }
 @keyframes ani9 {
