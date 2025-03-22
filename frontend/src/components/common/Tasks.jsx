@@ -43,11 +43,9 @@ export const TasksPage = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const userId = Cookies.get("userId");
   const priorityColors = {
-    5: "#e63d37", // High priority (red)
-    4: "#d19630", // Orange
-    3: "#dbba14", // Yellow
-    2: "#3be392", // Green
-    1: "#a2d6de ", // Low priority (blue)
+    High: "#e63d37", // High priority (red)
+    Medium: "#dbba14", // Yellow
+    Low: "#a2d6de ", // Low priority (blue)
   };
 
   const handleDeassign = async (taskId, userId) => {

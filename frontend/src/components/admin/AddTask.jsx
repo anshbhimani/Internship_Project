@@ -11,6 +11,8 @@ export const AddTask = () => {
   const [modules, setModules] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
+  const priorityOptions = ["Low", "Medium", "High", "Urgent"];
+
 
   const fetchProjects = async () => {
     try {
@@ -90,8 +92,12 @@ export const AddTask = () => {
               <input type="text" {...register("title")} className="form-control" required/>
             </div>
             <div className="form-group">
-              <label htmlFor="priority">Priority (1-5)</label>
-              <input type="range" {...register("priority")} id="priority" className="form-range" min="1" max="5" step="1" required/>
+              <label htmlFor="priority">Priority</label>
+              <select {...register("priority")} className="form-control" required>
+                {priorityOptions.map((priority, index) => (
+                  <option key={index} value={priority}>{priority}</option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label>Description</label>
