@@ -1,0 +1,64 @@
+.sidebar {
+    width: 13vw;
+    min-height: 100vh;
+    height: auto;
+    overflow: auto;
+    transition: width 0.3s ease-in-out;
+  }
+  
+  .sidebar.collapsed {
+    width: 3.5vw;
+    overflow: hidden;
+  }
+  
+  .sidebar ul {
+    padding: 0;
+    margin: 10px;
+    margin-left: 20px;
+  }
+  
+  .sidebar ul li {
+    list-style: none;
+    white-space: nowrap;
+  }
+  
+  .sidebar ul li a {
+    text-decoration: none;
+    display: block;
+    padding: 8px 10px;
+    transition: background 0.3s;
+  }
+  
+  .sidebar ul li a:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  button {
+    display: block;
+    margin-bottom: 10px;
+    margin-left: -10px;
+  }
+
+  .logout {
+    width: 100%; /* Makes the button span full width */
+    padding: 8px;
+    margin-top: 20px;
+    background-color: red;
+    color: white;
+    border: none;
+  }
+  
+  .logout:hover {
+    background-color: darkred;
+    transform: scale(1.05); /* Slight enlarge effect */
+  }
+  
+  .sidebar.collapsed .logout {
+    opacity: 0;
+    pointer-events: none; /* Prevent clicking when hidden */
+  }
+
+  
+  a{
+    margin-left: 15px;
+  }

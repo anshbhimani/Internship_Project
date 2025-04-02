@@ -1,0 +1,35 @@
+.custom-hr {
+    border: none; /* Remove default border */
+    height: 3px; /* Set thickness */
+    background-color: #000000 !important; /* Ensure the color applies */
+    width: 100% !important;
+    margin: 10px 0 !important; /* Adds spacing above and below */
+    opacity: 1; /* Ensure full visibility */
+}
+
+.developer-home {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  
+  .motivational-text {
+    font-style: italic;
+    color: #555;
+  }
+  
+  .quick-links button {
+    margin: 10px;
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+  }
+  
+  .quick-links button:hover {
+    background-color: #0056b3;
+  }
+  

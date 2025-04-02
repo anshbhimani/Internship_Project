@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+jose
+python-jose[cryptography]
+python-multipart
+bcrypt
+motor
+aiosmtplib
+python-dotenv
+aiosmtplib
+cloudinary
+pydantic[email]
